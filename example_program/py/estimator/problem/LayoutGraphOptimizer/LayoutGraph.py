@@ -134,3 +134,18 @@ class LayoutGraph():
         # Draw the graph
         nx.draw_networkx(self.G, with_labels=True, font_color='white', node_size=1000, node_color=colors, font_size=8, pos=pos)
         plt.show()
+
+    def reduce_graph(self, mix: dict):
+        remove_nodes = []
+        
+        for node in self.G:
+            node_type = self.G.nodes[node]['type']
+            
+            # If the node is start, end, or free station or it is included in the mix, it should be part of the graph
+            if (node_type == 'null' or node_type == 'start' or node_type == 'end')\
+                or (node_type in mix and mix[node_type] > 0):
+                continue
+            
+            remove_nodes.append(node)
+        
+        self.G.remove_nodes_from(remove_nodes)

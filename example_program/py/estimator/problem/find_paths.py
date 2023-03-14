@@ -38,30 +38,30 @@ COLOR_MAP = {
 # Variant Mix A: How many of each type of node should be traversed?
 VARIANT_MIX_A = {
     'b': 1,
-    'y': 2,
+    'y': 0,
     'g': 2
 }
 
 VARIANT_MIXES = {
     'A': {
         'b': 1,
-        'y': 2,
+        'y': 0,
         'g': 2
      },
     'B': {
-        'b': 1,
+        'b': 0,
         'y': 2,
-        'g': 2
+        'g': 1
      },
     'C': {
         'b': 1,
-        'y': 2,
-        'g': 2
+        'y': 1,
+        'g': 0
      },
     'D': {
         'b': 1,
         'y': 2,
-        'g': 2
+        'g': 1
      }
 }
 
@@ -71,21 +71,11 @@ graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
 
 # Create mix specific graphs
 graphMixes = {}
-for Mix in VARIANT_MIXES:
-    graphMixes[Mix] = deepcopy(graphGlobal)
-    graphMixes[Mix].reduce(VARIANT_MIXES[Mix])
-
-indx = 5 * 4 + 1
-node_color = 'g'
-node_name= f"{1}_{5}"
-graphMixes['A'].G.add_node(node_name, pos=(1, 5), type=node_color, weight=2, name=node_name)
-graphMixes['A'].plot_graph(COLOR_MAP)
-
-# Reduce each graph with the mix variant
-#graphMixA.reduce(VARIANT_MIX_A)
-#graphMixB.reduce(VARIANT_MIX_B)
-#graphMixC.reduce(VARIANT_MIX_C)
-#graphMixD.reduce(VARIANT_MIX_D)
+for mix in VARIANT_MIXES:
+    graphMixes[mix] = deepcopy(graphGlobal)
+    graphMixes[mix].reduce_graph(VARIANT_MIXES[mix])
+    graphMixes[mix].plot_graph(COLOR_MAP)
+    
 
 
 # Call the algorithm to find the shortest or all paths for the variant mix
