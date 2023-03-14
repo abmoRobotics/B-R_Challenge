@@ -1,0 +1,439 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "B&R & AWS Greengrass - OpenAPI 3.0",
+    "description": "This is the API for the simulator/controller for the B&R Acopos 6D that students will use in the \ngreengrass collaboration between AWS and B&R. \n\n\nSome useful links:\n- [B&R Acopos 6D](https://www.br-automation.com/en-us/products/mechatronic-systems/acopos-6d/)\n- [Amazon Web Services](https://aws.amazon.com)",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "email": "johan.malmberg@br-automation.com"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "1.0.0"
+  },
+  "externalDocs": {
+    "description": "Find out more about B&R",
+    "url": "https://br-automation.com"
+  },
+  "servers": [
+    {
+      "url": "https://bitbucket.br-automation.com/api/v1"
+    }
+  ],
+  "tags": [
+    {
+      "name": "config",
+      "description": "This will setup the configuration needed to run the simulation/real hardware"
+    },
+    {
+      "name": "shuttle",
+      "description": "This will handle the shuttle that move inbetween processing stations"
+    },
+    {
+      "name": "board",
+      "description": "This will handle the complete board with all the processing stations and shuttles"
+    }
+  ],
+  "paths": {
+    "/config": {
+      "post": {
+        "tags": [
+          "config"
+        ],
+        "summary": "create a new configuration for the simulation board",
+        "description": "This method will create a new board used for the simulation with all the processing stations, the shuttles and the board",
+        "operationId": "createConfig",
+        "requestBody": {
+          "description": "Create a new board for the simulation",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Config"
+              }
+            },
+            "application/xml": {
+              "schema": {
+                "$ref": "#/components/schemas/Config"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Config"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Config"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Config"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Configuration invalid"
+          },
+          "404": {
+            "description": "Configuration not found"
+          },
+          "405": {
+            "description": "Validation exception"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "config"
+        ],
+        "summary": "Deletes the current configuration for the simulation board",
+        "description": "This method will delete the current board used for the simulation",
+        "operationId": "deleteConfig",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Config"
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/Config"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Configuration invalid"
+          },
+          "404": {
+            "description": "Configuration not found"
+          },
+          "405": {
+            "description": "Validation exception"
+          }
+        }
+      }
+    },
+    "/board": {
+      "get": {
+        "tags": [
+          "board"
+        ],
+        "summary": "Gets the status of the complete board",
+        "description": "All statuses of all processing stations and all shuttles",
+        "operationId": "getBoardStatus",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Board"
+                  }
+                }
+              },
+              "application/xml": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Board"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid status value"
+          }
+        }
+      }
+    },
+    "/shuttle/move/{id}/{direction}": {
+      "post": {
+        "tags": [
+          "shuttle"
+        ],
+        "summary": "moves a shuttle one step",
+        "description": "Moves a shuttle one step in the specified direcition",
+        "operationId": "moveShuttleOneStep",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the shuttle that should move",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "direction",
+            "in": "path",
+            "description": "direction the shuttle should move",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "forth",
+                "right",
+                "left",
+                "back"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shuttle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Target station busy"
+          },
+          "405": {
+            "description": "Invalid input"
+          }
+        }
+      }
+    },
+    "/shuttle/move/{id}/to/{processingStationId}": {
+      "post": {
+        "tags": [
+          "shuttle"
+        ],
+        "summary": "moves a shuttle to the given processing station",
+        "description": "Moves a shuttle to the given processing station, limitations are that the shuttle cannot move diagonally only forward/backward or left/right in on move.",
+        "operationId": "moveShuttleToProcessingStation",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the shuttle that should move",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "processingStationId",
+            "in": "path",
+            "description": "processing station id the shuttle should move to",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shuttle"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Target station busy"
+          },
+          "405": {
+            "description": "Invalid processing station input"
+          }
+        }
+      }
+    },
+    "/shuttle/{id}": {
+      "get": {
+        "tags": [
+          "shuttle"
+        ],
+        "summary": "Returns status for a shuttle",
+        "description": "Returns data for a given shuttle",
+        "operationId": "getShuttle",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "the shuttle that should move",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Shuttle"
+                }
+              }
+            }
+          },
+          "405": {
+            "description": "Invalid processing shuttle id"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Config": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "format": "int64",
+            "example": 4
+          },
+          "columns": {
+            "type": "integer",
+            "format": "int64",
+            "example": 5
+          },
+          "shuttles": {
+            "type": "integer",
+            "format": "int64",
+            "example": 10
+          },
+          "stations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StationType"
+            }
+          }
+        },
+        "xml": {
+          "name": "config"
+        }
+      },
+      "Shuttle": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "SH01",
+            "description": "Shuttle id"
+          },
+          "currentStation": {
+            "type": "string",
+            "example": "PS01",
+            "description": "Station the shuttle is currently at, if 00 is set it is waiting at the start of the board"
+          },
+          "targetStation": {
+            "type": "string",
+            "example": "PS02",
+            "description": "Station the shuttle is moving to next"
+          },
+          "moving": {
+            "type": "boolean",
+            "example": false,
+            "description": "flag is false until shuttle locks the next station and moves there. once it reaches the station, flag goes down and currentStation is updated with targetStation and targetStation goes blank"
+          }
+        },
+        "xml": {
+          "name": "shuttle"
+        }
+      },
+      "StationType": {
+        "type": "object",
+        "properties": {
+          "color": {
+            "type": "string",
+            "example": "grey"
+          },
+          "time": {
+            "type": "integer",
+            "description": "Processing time in seconds",
+            "format": "int64",
+            "example": 5
+          }
+        }
+      },
+      "Station": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "PS01"
+          },
+          "station": {
+            "$ref": "#/components/schemas/StationType"
+          },
+          "locked": {
+            "type": "boolean",
+            "example": false,
+            "default": false,
+            "description": "Indicates whether the station is locked or not meaning a shuttle can move to it"
+          }
+        },
+        "xml": {
+          "name": "station"
+        }
+      },
+      "Board": {
+        "type": "object",
+        "properties": {
+          "rows": {
+            "type": "integer",
+            "format": "int64",
+            "example": 4
+          },
+          "columns": {
+            "type": "integer",
+            "format": "int64",
+            "example": 5
+          },
+          "stations": {
+            "type": "array",
+            "xml": {
+              "wrapped": true
+            },
+            "items": {
+              "$ref": "#/components/schemas/Station"
+            }
+          },
+          "shuttles": {
+            "type": "array",
+            "xml": {
+              "wrapped": true
+            },
+            "items": {
+              "$ref": "#/components/schemas/Shuttle"
+            }
+          }
+        },
+        "xml": {
+          "name": "board"
+        }
+      }
+    }
+  }
+}

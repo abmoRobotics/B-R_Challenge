@@ -1,0 +1,4 @@
+{
+    "server": "http://localhost:3001",
+    "websocket": "ws://localhost:3001?storeId=2001"
+}

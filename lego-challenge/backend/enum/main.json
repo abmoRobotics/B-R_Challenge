@@ -1,0 +1,11 @@
+{
+    "BOARD_ID": "2001",
+    "RETURN_STATION": "return",
+    "NOT_IN_USE": "n/a",
+    "STATE_IDLE": "idle",
+    "STATE_PROCESSING": "processing",
+    "PROCESSING_COLOR": "red",
+    "MOVING_TIME": 1000,
+    "RETURN_MOVING_TIME": 2000,
+    "SIMULATION": true
+}

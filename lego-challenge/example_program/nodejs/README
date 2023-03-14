@@ -1,0 +1,26 @@
+This program cannot be run from within the aws-backend folder, it has to be moved to a toplevel folder at the same level as the aws-backend
+folder. See example below.
+then run _npm i_
+after that you can run the _npm start_ command (see package file)
+This will start publishing commands to an MQTT broker
+and wait for replies from the aws-backend
+
+
+OBS: 
+This part is pretty bad, but a temporary solution.
+The folder structure must be as below because there are dependencies in the example program main.js to the enums in the aws-backend program.
+either move them and rewrite paths or you just have to live with it for now...
+
+- top level folder
+-- aws-backend
+---enum
+----erros.json
+----mqttenum.json
+
+-- student-program-folder
+--- controllers
+---- main.js
+--- data
+--- node_moduels
+--- server.js
+--- package.json

@@ -1,0 +1,6 @@
+{
+    "BROKER_PATH": "mqtt://localhost",
+    "TOPIC_COMMAND": "aws_br/command",
+    "TOPIC_STATUS": "aws_br/status",
+    "TOPIC_BOARD":"aws_br/board"
+}

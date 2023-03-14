@@ -1,0 +1,51 @@
+.gridRect {
+    fill: gray;
+    width: 50px;
+    height: 50px;
+    rx: 5px;
+  }
+
+  body {
+    font-family: 'Roboto', sans-serif;
+  }
+
+#tableWrap{
+  position: fixed;
+  left: 900px;
+  top: 100px;
+}
+#tableWrap2{
+  position: fixed;
+  left: 1315px;
+  top: 100px;
+}
+
+#variantTableHeader{
+  font-size:1.9em;
+}
+#orderTableHeader{
+  font-size:1.9em;
+}
+
+#variantTable {
+  margin: 25px 0;
+  font-size: 1.2em;
+  font-family: sans-serif;
+  min-width: 400px;
+  min-height:180px;
+  border-radius: 5px;
+  border-style: hidden; /* hide standard table (collapsed) border */
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+#orderTable {
+  margin: 25px 0;
+  font-size: 1.2em;
+  font-family: sans-serif;
+  min-width: 300px;
+  min-height:180px;
+  border-radius: 5px;
+  border-style: hidden; /* hide standard table (collapsed) border */
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
