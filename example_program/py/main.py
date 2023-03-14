@@ -7,7 +7,7 @@ from time import sleep
 from model import Model
 
 # static data for connecting
-broker = '192.168.99.110' #192.168.99.110
+broker = 'localhost' #192.168.99.110
 port = 1883
 topic_cmd = "aws_br/command"
 topic_status = "aws_br/status"
