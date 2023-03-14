@@ -1,0 +1,299 @@
+{
+    "rows": 6,
+    "columns": 7,
+    "stations": [
+        {
+            "color": "green",
+            "time": 1,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "green",
+            "time": 1,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "blue",
+            "time": 2,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "grey",
+            "time": 2,
+            "inuse": false
+        },
+        {
+            "color": "green",
+            "time": 1,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "green",
+            "time": 1,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "grey",
+            "time": 2,
+            "inuse": false
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "grey",
+            "time": 2,
+            "inuse": false
+        },
+        {
+            "color": "grey",
+            "time": 1,
+            "inuse": false
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "grey",
+            "time": 1,
+            "inuse": false
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "grey",
+            "time": 2,
+            "inuse": false
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "blue",
+            "time": 2,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 1,
+            "inuse": false
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "grey",
+            "time": 1,
+            "inuse": false
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "grey",
+            "time": 2,
+            "inuse": false
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "green",
+            "time": 1,
+            "inuse": true
+        },
+        {
+            "color": "yellow",
+            "time": 3,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "yellow",
+            "time": 3,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "grey",
+            "time": 2,
+            "inuse": false
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "yellow",
+            "time": 3,
+            "inuse": true
+        },
+        {
+            "color": "blue",
+            "time": 2,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "yellow",
+            "time": 3,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "yellow",
+            "time": 3,
+            "inuse": true
+        },
+        {
+            "color": "grey",
+            "time": 2
+        },
+        {
+            "color": "green",
+            "time": 2,
+            "inuse": true
+        }
+    ],
+    "shuttles": [
+        {
+            "id": "0"
+        },
+        {
+            "id": "1"
+        },
+        {
+            "id": "2"
+        },
+        {
+            "id": "3"
+        },
+        {
+            "id": "4"
+        },
+        {
+            "id": "5"
+        },
+        {
+            "id": "6"
+        },
+        {
+            "id": "7"
+        },
+        {
+            "id": "8"
+        },
+        {
+            "id": "9"
+        },
+        {
+            "id": "10"
+        },
+        {
+            "id": "11"
+        },
+        {
+            "id": "12"
+        },
+        {
+            "id": "13"
+        },
+        {
+            "id": "14"
+        }
+    ],
+    "orders": [
+        {
+            "id": "mix_a",
+            "quantity": 8,
+            "recipe": [
+                {
+                    "color": "green",
+                    "quantity": 2
+                },
+                {
+                    "color": "yellow",
+                    "quantity": 1
+                }
+            ]
+        },
+        {
+            "id": "mix_b",
+            "quantity": 8,
+            "recipe": [
+                {
+                    "color": "blue",
+                    "quantity": 1
+                }
+            ]
+        },
+        {
+            "id": "mix_c",
+            "quantity": 8,
+            "recipe": [
+                {
+                    "color": "green",
+                    "quantity": 1
+                },
+                {
+                    "color": "blue",
+                    "quantity": 1
+                }
+            ]
+        },
+        {
+            "id": "mix_d",
+            "quantity": 8,
+            "recipe": [
+                {
+                    "color": "yellow",
+                    "quantity": 1
+                },
+                {
+                    "color": "blue",
+                    "quantity": 1
+                }
+            ]
+        }
+    ]
+}

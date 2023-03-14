@@ -1,0 +1,102 @@
+[
+    {
+        "shuttleId": "0",
+        "currentMix": "mix_d",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },
+    {
+        "shuttleId": "1",
+        "currentMix": "mix_a",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },
+    {
+        "shuttleId": "2",
+        "currentMix": "mix_a",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },
+    {
+        "shuttleId": "3",
+        "currentMix": "mix_a",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },
+    {
+        "shuttleId": "4",
+        "currentMix": "mix_a",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },
+    {
+        "shuttleId": "5",
+        "currentMix": "mix_a",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },
+    {
+        "shuttleId": "6",
+        "currentMix": "mix_a",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },
+    {
+        "shuttleId": "7",
+        "currentMix": "",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },
+    {
+        "shuttleId": "8",
+        "currentMix": "",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },
+    {
+        "shuttleId": "9",
+        "currentMix": "",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },{
+        "shuttleId": "10",
+        "currentMix": "",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },{
+        "shuttleId": "11",
+        "currentMix": "",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },{
+        "shuttleId": "12",
+        "currentMix": "",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },{
+        "shuttleId": "13",
+        "currentMix": "",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    },{
+        "shuttleId": "14",
+        "currentMix": "",
+        "intialMixSet": false,
+        "currentMovePos": -1,
+        "movements": []
+    }
+]
