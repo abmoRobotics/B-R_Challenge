@@ -1,6 +1,8 @@
+from copy import deepcopy
 from LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path
 from LayoutGraphOptimizer.utils import get_movement_instructions_from_path
 import json
+
 
 # Define a placement layout of types of processing stations (b, y, g) and null (no station). A position on the grid is a node.
 LAYOUT = {
@@ -40,9 +42,51 @@ VARIANT_MIX_A = {
     'g': 2
 }
 
-# Create graph from layout and weights
+VARIANT_MIXES = {
+    'A': {
+        'b': 1,
+        'y': 2,
+        'g': 2
+     },
+    'B': {
+        'b': 1,
+        'y': 2,
+        'g': 2
+     },
+    'C': {
+        'b': 1,
+        'y': 2,
+        'g': 2
+     },
+    'D': {
+        'b': 1,
+        'y': 2,
+        'g': 2
+     }
+}
+
+# Create a global graph from layout and weights
 print('Creating graph...')
-graph = LayoutGraph(LAYOUT, WEIGHTS)
+graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
+
+# Create mix specific graphs
+graphMixes = {}
+for Mix in VARIANT_MIXES:
+    graphMixes[Mix] = deepcopy(graphGlobal)
+    graphMixes[Mix].reduce(VARIANT_MIXES[Mix])
+
+indx = 5 * 4 + 1
+node_color = 'g'
+node_name= f"{1}_{5}"
+graphMixes['A'].G.add_node(node_name, pos=(1, 5), type=node_color, weight=2, name=node_name)
+graphMixes['A'].plot_graph(COLOR_MAP)
+
+# Reduce each graph with the mix variant
+#graphMixA.reduce(VARIANT_MIX_A)
+#graphMixB.reduce(VARIANT_MIX_B)
+#graphMixC.reduce(VARIANT_MIX_C)
+#graphMixD.reduce(VARIANT_MIX_D)
+
 
 # Call the algorithm to find the shortest or all paths for the variant mix
 
@@ -50,7 +94,6 @@ graph = LayoutGraph(LAYOUT, WEIGHTS)
 
 # Get the movement instructions for the paths
 #   Like so: movement_instructions_mix_a, start_row = get_movement_instructions_from_path(path)
-
 
 # Example:
 # first store the id of the mix
@@ -86,8 +129,8 @@ store_movements = {
 #   }
 }
 json_object = json.dumps(store_movements, indent=2)
-with open("../../data/board.movements.json", "w") as outfile:
+with open("example_program/py/data/board.movements.json", "w") as outfile:
     outfile.write(json_object)
 
 # Plot the graph (without paths)
-graph.plot_graph(COLOR_MAP)
+graphGlobal.plot_graph(COLOR_MAP)
