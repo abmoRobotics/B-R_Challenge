@@ -12,7 +12,7 @@ LAYOUT = {
         'null','null','null','null','null','null','g',
         'null','null','null','null','null','null','b',
         'g', 'null','g','null', 'null','null','null',
-        'g', 'null','g','null', 'null','b','null',
+        'g', 'null','g','null', 'null','b','null'
     ],
     'length_x': 7,
     'length_y': 6
@@ -23,7 +23,7 @@ WEIGHTS = {
     'b': 3,
     'y': 3,
     'g': 5,
-    'null': 1
+    'null': 1,
 }
 
 # Set colors for nodes, which is needed for plotting the graph. Note that each you need to define the color for each 
@@ -38,32 +38,26 @@ COLOR_MAP = {
 }
 
 # Variant Mix A: How many of each type of node should be traversed?
-VARIANT_MIX_A = {
-    'b': 1,
-    'y': 0,
-    'g': 2
-}
-
 VARIANT_MIXES = {
     'A': {
-        'b': 1,
-        'y': 0,
-        'g': 2
+        'g': 2,
+        'y': 1,
+        'b': 0
      },
     'B': {
-        'b': 0,
-        'y': 2,
-        'g': 1
+        'g': 0,
+        'y': 0,
+        'b': 1
      },
     'C': {
-        'b': 1,
-        'y': 1,
-        'g': 0
+        'g': 1,
+        'y': 0,
+        'b': 1
      },
     'D': {
-        'b': 1,
-        'y': 2,
-        'g': 1
+        'g': 0,
+        'y': 1,
+        'b': 1
      }
 }
 
@@ -77,8 +71,6 @@ for mix in VARIANT_MIXES:
     graphMixes[mix] = deepcopy(graphGlobal)
     graphMixes[mix].reduce_graph(VARIANT_MIXES[mix])
     graphMixes[mix].plot_graph(COLOR_MAP)
-    
-
 
 # Call the algorithm to find the shortest or all paths for the variant mix
 
@@ -120,9 +112,11 @@ store_movements = {
 #     }
 #   }
 }
-json_object = json.dumps(store_movements, indent=2)
-with open("example_program/py/data/board.movements.json", "w") as outfile:
-    outfile.write(json_object)
+
+# ONLY COMMENT IN WHEN WE WANT TO STORE THE MOVEMENTS
+#json_object = json.dumps(store_movements, indent=2)
+#with open("example_program/py/data/board.movements.json", "w") as outfile:
+#    outfile.write(json_object)
 
 # Plot the graph (without paths)
 graphGlobal.plot_graph(COLOR_MAP)

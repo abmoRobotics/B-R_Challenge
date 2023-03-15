@@ -94,16 +94,25 @@ class LayoutGraph():
                     node_color_left = layout['nodes'][indx_left]
                     self.G.add_edge(f"{x}_{y}", f"{x-1}_{y}", weight=weights[node_color_left])
 
-        # Add start and end node
-        self.G.add_node('start', pos=(round(layout['length_x']/2), -1), type='start', weight=0, name='start')
-        self.G.add_node('end', pos=(round(layout['length_x']/2), layout['length_y']), type='end', weight=0, name='end')
-
-        # Add nodes from start to first row
+        # Add nodes and edges for starting lane
         for x in range(0, layout['length_x']):
-            self.G.add_edge('start', f"{x}_0", weight=0)
+            self.G.add_node(f"{x}_start", pos=(x, -1), type='null', weight=0, name=f"{x}_start")
         
+        for x in range(0, layout['length_x']):
+            if x > 0: self.G.add_edge(f"{x}_start", f"{x-1}_start", weight=0) # Left
+            if x < layout['length_x'] - 1: self.G.add_edge(f"{x}_start", f"{x+1}_start", weight=0) # Right
+            self.G.add_edge(f"{x}_start", f"{x}_0", weight=0) # Up
+        
+        # Add start and end node
+        self.G.add_node('start', pos=(layout['length_x'], -1), type='start', weight=0, name='start')
+        self.G.add_node('end', pos=(round(layout['length_x']/2) - 1, layout['length_y']), type='end', weight=0, name='end')
 
-        # Add nodes from last row to end
+        # Add edges from start to first node in start lane
+        # for x in range(0, layout['length_x']):
+        #     self.G.add_edge('start', f"{x}_0", weight=0)
+        self.G.add_edge('start', f"{layout['length_x']-1}_start", weight=0)
+        
+        # Add edges from last row to end
         for x in range(0, layout['length_x']):
             self.G.add_edge(f"{x}_{layout['length_y']-1}", 'end', weight=0)
 
@@ -111,12 +120,24 @@ class LayoutGraph():
         """Helper function to get the attributes of a path"""
         return [self.G.nodes(data=True)[p] for p in path]
 
+    def count_stations_in_mix(self, node_type: str) -> int:
+        """Return the number of the stations with the given station type in the mix"""
+        count = 0
+        for node in self.G.nodes:
+            if node_type == self.G.nodes[node]['type']: count += 1
+        return count
+    
+    def find_best_combinations_for_mix(self, mix: dict, upper_bound: int) -> List[List[str]]:
+        """Find the different combinations for the mix in order from best to worst"""
+        
+        
+        raise NotImplementedError("This function is not implemented yet.")
+    
     def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> List[Path]:
         """TODO: Find all paths for a given mix"""
 
         raise NotImplementedError("This function is not implemented yet.")
         
-
     def find_shortest_paths_for_mix(self, mix: dict, cutoff: int = None) -> List[Path]:
         """TODO: Find the shortest paths for a given mix"""
         
@@ -142,7 +163,7 @@ class LayoutGraph():
             node_type = self.G.nodes[node]['type']
             
             # If the node is start, end, or free station or it is included in the mix, it should be part of the graph
-            if (node_type == 'null' or node_type == 'start' or node_type == 'end')\
+            if (node_type == 'null' or node_type == 'start' or node_type == 'hand' or node_type == 'end')\
                 or (node_type in mix and mix[node_type] > 0):
                 continue
             
