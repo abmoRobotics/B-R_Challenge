@@ -7,13 +7,15 @@ import json
 # Define a placement layout of types of processing stations (b, y, g) and null (no station). A position on the grid is a node.
 LAYOUT = {
     'nodes': [
-        'b', 'b', 'b', 'y',
-        'b', 'b', 'y', 'y',
-        'y', 'null', 'null', 'g',
-        'y', 'null', 'null', 'g'
+        'b', 'null','y','null','y','null','g',
+        'y', 'null', 'y','null','null','null', 'y',
+        'null','null','null','null','null','null','g',
+        'null','null','null','null','null','null','b',
+        'g', 'null','g','null', 'null','null','null',
+        'g', 'null','g','null', 'null','b','null',
     ],
-    'length_x': 4,
-    'length_y': 4
+    'length_x': 7,
+    'length_y': 6
 }
 
 # Define weights (i.e. processing time) for each node type (including null)
