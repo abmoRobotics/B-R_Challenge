@@ -1,6 +1,8 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from typing import List
+from itertools import product
+from more_itertools import distinct_permutations
 
 class Path():
     """A more sohisticated path class that can be used to store a path in the graph and
@@ -126,13 +128,96 @@ class LayoutGraph():
         for node in self.G.nodes:
             if node_type == self.G.nodes[node]['type']: count += 1
         return count
-    
-    def find_best_combinations_for_mix(self, mix: dict, upper_bound: int) -> List[List[str]]:
-        """Find the different combinations for the mix in order from best to worst"""
+
+    def get_cost_of_combination(self, combination: List[tuple]) -> int:
+        """Return the cost of a given combination based on Manhattan distance between stations"""
+        cost = 0
+        prevPos = (0, -1)
+        for pos in combination:
+            cost += self.manhattan_distance(prevPos, pos) if prevPos != pos else 2
+            prevPos = pos
         
+        # Add distance to goal lane
+        cost += self.manhattan_distance(prevPos, (prevPos[0], self.layout['length_y']))
         
-        raise NotImplementedError("This function is not implemented yet.")
+        return cost
     
+    def manhattan_distance(self, pos1, pos2) -> int:
+        """Find the Manhattan distance between pos1 and pos2"""
+        return abs(pos2[0] - pos1[0]) + abs(pos2[1] - pos1[1])
+    
+    def is_combination_valid(self, combination: List[tuple], mix: dict) -> bool:
+        """Return whether or not a given combination is valid based on the mix"""
+        temp_mix = mix.copy()
+        
+        for pos in combination:
+            node_type = self.G.nodes[f"{pos[0]}_{pos[1]}"]['type']
+            
+            if node_type in temp_mix and temp_mix[node_type] > 0:
+                temp_mix[node_type] -= 1
+            else: return False
+        
+        return True
+    
+    def find_all_combinations_for_mix(self, mix: dict):
+        """Find all the different combinations of stations for the given mix"""
+        # Order the possible stations on the board by station type
+        stations_in_mix = {station_type: [] for station_type in mix}
+        for node in self.G.nodes:
+            node_type = self.G.nodes[node]['type']
+            if node_type in mix:
+                stations_in_mix[node_type].append(self.G.nodes[node]['pos'])
+        
+        # Initialising lists for combinations
+        station_samples = []
+        station_permutations = []
+        final_combinations = []
+        
+        # Insert the amount of samples we need for each type as the station positions for that type
+        # Example: b=1, g=2 -> [(xb_1, yb_1,), ...], [(xg_1, yg_1,), ...], [(xg_1, yg_1,), ...]
+        for station_type in mix:
+                for _ in range(mix[station_type]):
+                    station_samples.append(stations_in_mix[station_type])
+        
+        # Obtain the distinct permutations of the sample positions from before
+        # Example: b=1, g=2 -> [b, g, g], [g, b, g], [g, g, b]
+        list_iter = distinct_permutations(station_samples)
+        for item in list_iter:
+            station_permutations.append(item)
+        
+        # Obtain all the combinations from the possible stations for each station type and for each permutation
+        # Example (one permutation): b = 1, g = 2 and b=[(1, 2), (4, 3)], g=[(3, 2), (4, 6), (6, 5)] ->
+        # [(1, 2), (3, 2), (4, 6)], [(1, 2), (3, 2), (6, 5)], [(1, 2), (4, 6), (6, 5)], [(4, 3), (3, 2), (4, 6)], [(4, 3), (3, 2), (6, 5)], [(4, 3), (4, 6), (6, 5)]
+        for station_permutation in station_permutations:
+            list_iter = [p for p in product(*station_permutation)]
+            for item in list_iter:
+                final_combinations.append(item)
+
+        # Return the list containing all the combinations
+        return final_combinations
+        
+    
+    def find_best_combinations_for_mix(self, mix: dict, n: int) -> List[List[str]]:
+        """Find the n best combinations for the mix in order from best to worst"""
+        combination_list = []
+        stations_in_mix = {}
+        stations_in_mix['type'] = {station_type: [] for station_type in mix}
+        stations_in_mix['row'] = {i: [] for i in range(self.layout['length_x'])}
+        
+        # Append the positions of the stations from the graph
+        for node in self.G.nodes:
+            node_type = self.G.nodes[node]['type']
+            if node_type in mix:
+                stations_in_mix['type'][node_type].append(self.G.nodes[node]['pos'])
+                
+                row = self.G.nodes[node]['pos'][1]
+                stations_in_mix['row'][row].append((node_type, self.G.nodes[node]['pos']))
+        
+        # NOT DONE
+        
+        return combination_list
+    
+
     def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> List[Path]:
         """TODO: Find all paths for a given mix"""
 

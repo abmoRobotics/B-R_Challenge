@@ -16,13 +16,10 @@ def find_paths(layout, weights, prod_order) -> dict:
 
     raise NotImplementedError("This function is not implemented yet.")
 
-
 def calculate_costs(paths, prod_order, layout, station_placement_cost):
     """TODO: Create a cost function that takes the paths and the layout and returns the overall cost of the production order"""
 
     raise NotImplementedError("This function is not implemented yet.")
-    
-
 
 def get_movement_instructions_from_path(path: Path):
     """Get the movement instructions and start position for a given path"""
