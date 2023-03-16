@@ -39,22 +39,22 @@ COLOR_MAP = {
 
 # Variant Mix A: How many of each type of node should be traversed?
 VARIANT_MIXES = {
-    'A': {
+    'mix_a': {
         'g': 2,
         'y': 1,
         'b': 0
      },
-    'B': {
+    'mix_b': {
         'g': 0,
         'y': 0,
         'b': 1
      },
-    'C': {
+    'mix_c': {
         'g': 1,
         'y': 0,
         'b': 1
      },
-    'D': {
+    'mix_d': {
         'g': 0,
         'y': 1,
         'b': 1
@@ -67,10 +67,20 @@ graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
 
 # Create mix specific graphs
 graphMixes = {}
-for mix in VARIANT_MIXES:
-    graphMixes[mix] = deepcopy(graphGlobal)
-    graphMixes[mix].reduce_graph(VARIANT_MIXES[mix])
-    graphMixes[mix].plot_graph(COLOR_MAP)
+combinations = {}
+for mix_type in VARIANT_MIXES:
+    # Reducing the graph corresponding to the given mix and plotting the result
+    graphMixes[mix_type] = deepcopy(graphGlobal)
+    graphMixes[mix_type].reduce_graph(VARIANT_MIXES[mix_type])
+    #graphMixes[mix].plot_graph(COLOR_MAP)
+
+    # Obtaining all the combinations for the mix and saving the corresponding cost
+    combinations[mix_type] = graphGlobal.find_all_combinations_for_mix(VARIANT_MIXES[mix_type])
+    for idx, combination in enumerate(combinations[mix_type]):
+        if graphGlobal.is_combination_valid(combination, VARIANT_MIXES[mix_type]):
+            combinations[mix_type][idx] = (combination, graphGlobal.get_cost_of_combination(combination))
+        else:
+            raise Exception('Not a valid combination for mix')
 
 # Call the algorithm to find the shortest or all paths for the variant mix
 
