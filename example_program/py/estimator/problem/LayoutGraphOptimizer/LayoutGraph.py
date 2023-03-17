@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from typing import List
 from itertools import product
 from more_itertools import distinct_permutations
+import sys
 
 class Path():
     """A more sohisticated path class that can be used to store a path in the graph and
@@ -122,23 +123,23 @@ class LayoutGraph():
         """Helper function to get the attributes of a path"""
         return [self.G.nodes(data=True)[p] for p in path]
 
-    def count_stations_in_mix(self, node_type: str) -> int:
-        """Return the number of the stations with the given station type in the mix"""
-        count = 0
-        for node in self.G.nodes:
-            if node_type == self.G.nodes[node]['type']: count += 1
-        return count
-
-    def get_cost_of_combination(self, combination: List[tuple]) -> int:
+    def _get_size_of_graph(self):
+        """Get the size of the graph in bytes"""
+        return sys.getsizeof(self)
+    
+    def get_cost_of_combination(self, combination: List[tuple], startColumn = -1) -> int:
         """Return the cost of a given combination based on Manhattan distance between stations"""
         cost = 0
-        prevPos = (0, -1)
+        
+        # Set the initial previous position, either in same column as first position in combination
+        # or in the specified start column
+        prevPos = (combination[0][0], -1) if startColumn == -1 else (startColumn, -1)
         for pos in combination:
             cost += self.manhattan_distance(prevPos, pos) if prevPos != pos else 2
             prevPos = pos
         
-        # Add distance to goal lane
-        cost += self.manhattan_distance(prevPos, (prevPos[0], self.layout['length_y']))
+        # Add shortest distance to goal lane
+        cost += abs(self.layout['length_y'] - prevPos[1])
         
         return cost
     

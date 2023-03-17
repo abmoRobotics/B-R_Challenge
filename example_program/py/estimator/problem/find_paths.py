@@ -12,7 +12,7 @@ LAYOUT = {
         'null','null','null','null','null','null','g',
         'null','null','null','null','null','null','b',
         'g', 'null','g','null', 'null','null','null',
-        'g', 'null','g','null', 'null','b','null'
+        'g', 'null','g','null', 'b','null','null'
     ],
     'length_x': 7,
     'length_y': 6
@@ -66,19 +66,18 @@ print('Creating graph...')
 graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
 
 # Create mix specific graphs
-graphMixes = {}
+graphMixes = {mix_type: deepcopy(graphGlobal) for mix_type in VARIANT_MIXES}
 combinations = {}
 for mix_type in VARIANT_MIXES:
     # Reducing the graph corresponding to the given mix and plotting the result
-    graphMixes[mix_type] = deepcopy(graphGlobal)
     graphMixes[mix_type].reduce_graph(VARIANT_MIXES[mix_type])
     #graphMixes[mix].plot_graph(COLOR_MAP)
-
+    
     # Obtaining all the combinations for the mix and saving the corresponding cost
-    combinations[mix_type] = graphGlobal.find_all_combinations_for_mix(VARIANT_MIXES[mix_type])
+    combinations[mix_type] = graphMixes[mix_type].find_all_combinations_for_mix(VARIANT_MIXES[mix_type])
     for idx, combination in enumerate(combinations[mix_type]):
         if graphGlobal.is_combination_valid(combination, VARIANT_MIXES[mix_type]):
-            combinations[mix_type][idx] = (combination, graphGlobal.get_cost_of_combination(combination))
+            combinations[mix_type][idx] = (combination, graphMixes[mix_type].get_cost_of_combination(combination))
         else:
             raise Exception('Not a valid combination for mix')
 
