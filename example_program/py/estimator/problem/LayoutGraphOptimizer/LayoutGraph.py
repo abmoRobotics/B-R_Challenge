@@ -110,7 +110,7 @@ class LayoutGraph():
         for x in range(0, layout['length_x']):
             if x > 0: self.G.add_edge(f"{x}_start", f"{x-1}_start", weight=0) # Left
             if x < layout['length_x'] - 1: self.G.add_edge(f"{x}_start", f"{x+1}_start", weight=0) # Right
-            self.G.add_edge(f"{x}_start", f"{x}_0", weight=0) # Up
+            self.G.add_edge(f"{x}_start", f"{x}_0", weight=weights[layout['nodes'][x]]) # Up
         
         # Add start and end node
         self.G.add_node('start', pos=(layout['length_x'], -1), type='start', weight=0, name='start')
@@ -208,28 +208,15 @@ class LayoutGraph():
             list_iter = [p for p in product(*station_permutation)]
             for item in list_iter:
                 # Convert the item to the correct datatype
-                item = Combination(list(item))
+                item = list(item)
 
                 # Only keep the valid combinations (i.e. those that don't go backwards) and assign the cost
-                if not self.is_valid(item, mix): continue
+                if not self.is_valid(Combination(item), mix): continue
 
-                final_combinations.append(Combination(item, self.get_cost(item)))
+                final_combinations.append(Combination(item, self.get_cost(Combination(item))))
 
         # Return the list containing all the combinations
         return final_combinations
-    
-    def plot(self, color_map: dict):
-        """Plot the graph with the node positions as given in the layout"""
-
-        pos = nx.get_node_attributes(self.G,'pos')
-        colors = nx.get_node_attributes(self.G,'type')
-
-        # Create list of colors based on node types by iterating through nodes
-        colors = [color_map[self.G.nodes[node]['type']] for node in self.G]
-
-        # Draw the graph
-        nx.draw_networkx(self.G, with_labels=True, font_color='white', node_size=1000, node_color=colors, font_size=8, pos=pos)
-        plt.show()
 
     def reduce(self, combination: Combination):
         """Return the reduced graph including free nodes and the nodes contained in the combination"""
@@ -250,6 +237,24 @@ class LayoutGraph():
         
         return reduced_graph
         
+    def update_graph_weights(self, path: Path, reset_weights: bool = False):
+        """Update the graph weights based on a path. The added (or subtracted if reset_weights is true) 
+        weights correspond to the weight of the given node type in that position"""
+        # Determine the sign corresponding to whether we are about to start the path (reset_weights = false)
+        # or have just ended the path (reset_weights)
+        sign = 1 if not reset_weights else -1
+        
+        # Go through the nodes and the corresponding edges in the path
+        for node in path.nodes:
+            # Update the node weight (if sign is 1 we add the weight and if sign is -1 we subtract the weight)
+            self.G.nodes[node['name']]['weight'] += sign*self.weights[node['type']]
+            
+            # Update the edges going into this node to this weight
+            in_edges = self.G.in_edges(node['name'])
+            for edge in in_edges:
+                self.G.edges[edge]['weight'] = self.G.nodes[node['name']]['weight']
+    
+    
     def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
         """TODO: Find all paths for a given mix"""
 
@@ -261,6 +266,18 @@ class LayoutGraph():
         raise NotImplementedError("This function is not implemented yet.")
 
 
+    def plot(self, color_map: dict):
+        """Plot the graph with the node positions as given in the layout"""
+
+        pos = nx.get_node_attributes(self.G,'pos')
+        colors = nx.get_node_attributes(self.G,'type')
+
+        # Create list of colors based on node types by iterating through nodes
+        colors = [color_map[self.G.nodes[node]['type']] for node in self.G]
+
+        # Draw the graph
+        nx.draw_networkx(self.G, with_labels=True, font_color='white', node_size=1000, node_color=colors, font_size=8, pos=pos)
+        plt.show()
     
 
     

@@ -91,9 +91,9 @@ def get_sorted_best_combinations(combination_list: list[Combination], n) -> list
     and sorted from best to worst.
     """
     if len(combination_list) < n: n = len(combination_list)
-        
+    
     sorted_combination_list = sorted(combination_list, key=lambda x: x.cost)
-        
+    
     return sorted_combination_list[0:n]
 
 def get_best_combination(combinations: list[Combination]) -> Combination:
