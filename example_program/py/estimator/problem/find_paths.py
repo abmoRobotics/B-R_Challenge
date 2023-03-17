@@ -73,8 +73,9 @@ for mix_type in VARIANT_MIXES:
     
     # Keep only the 50 best combinations in order from best to worst
     combinations[mix_type] = get_sorted_best_combinations(combinations[mix_type], 50)
-  
-best = get_best_combination(combinations["mix_a"])
+
+
+
 # Call the algorithm to find the shortest or all paths for the variant mix
 
 # Print found paths
