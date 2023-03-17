@@ -1,6 +1,6 @@
 from copy import deepcopy
 from LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path
-from LayoutGraphOptimizer.utils import get_movement_instructions_from_path
+from LayoutGraphOptimizer.utils import *
 import json
 
 
@@ -69,14 +69,12 @@ graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
 combinations = {}
 for mix_type in VARIANT_MIXES:
     # Obtaining all the valid combinations and corresponding cost
-    combinations[mix_type] = graphGlobal.get_all_valid_combinations_for_mix(VARIANT_MIXES[mix_type])
+    combinations[mix_type] = graphGlobal.get_all_valid_combinations(VARIANT_MIXES[mix_type])
     
     # Keep only the 50 best combinations in order from best to worst
-    combinations[mix_type] = graphGlobal.get_sorted_best_combinations(combinations[mix_type], 50)
-
-reduced_graph = graphGlobal.reduce_graph(combinations['mix_a'][0])
-reduced_graph.plot_graph(COLOR_MAP)
-
+    combinations[mix_type] = get_sorted_best_combinations(combinations[mix_type], 50)
+  
+best = get_best_combination(combinations["mix_a"])
 # Call the algorithm to find the shortest or all paths for the variant mix
 
 # Print found paths
@@ -124,4 +122,4 @@ store_movements = {
 #    outfile.write(json_object)
 
 # Plot the graph (without paths)
-graphGlobal.plot_graph(COLOR_MAP)
+graphGlobal.plot(COLOR_MAP)

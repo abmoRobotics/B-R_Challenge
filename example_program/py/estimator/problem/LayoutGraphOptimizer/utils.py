@@ -2,8 +2,7 @@ import networkx as nx
 import numpy as np
 import random
 
-from .LayoutGraph import LayoutGraph
-from .LayoutGraph import Path
+from .LayoutGraph import LayoutGraph, Path, Combination
 
 
 def random_layout(length_x, length_y, node_types):
@@ -86,3 +85,16 @@ def get_movement_instructions_from_path(path: Path):
     start_row = path[1]['pos'][0]
 
     return movement_instructions, start_row
+
+def get_sorted_best_combinations(combination_list: list[Combination], n) -> list[Combination]:
+    """Return a list of the n best combinations from the "combination_list" based on cost 
+    and sorted from best to worst.
+    """
+    if len(combination_list) < n: n = len(combination_list)
+        
+    sorted_combination_list = sorted(combination_list, key=lambda x: x.cost)
+        
+    return sorted_combination_list[0:n]
+
+def get_best_combination(combinations: list[Combination]) -> Combination:
+    return min(combinations, key=lambda x : x.cost)

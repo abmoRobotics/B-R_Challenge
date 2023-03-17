@@ -1,10 +1,16 @@
+import sys
 import networkx as nx
 import matplotlib.pyplot as plt
-from typing import List
 from itertools import product
 from more_itertools import distinct_permutations
-import sys
 from copy import deepcopy
+
+class Combination():
+    """Defines a simple datastructure that represents a combination"""
+    def __init__(self, nodes: list, cost: int = sys.maxsize):
+        self.nodes = nodes
+        self.cost = cost
+
 
 class Path():
     """A more sohisticated path class that can be used to store a path in the graph and
@@ -46,7 +52,6 @@ class LayoutGraph():
     """Class that represents a graph model of a layout and provides methods
     to find shortest paths for specific variant mixes to be manufactured.
     """
-
     def __init__(self, layout: dict, weights: dict):
         """Construct a graph from a layout and weights
 
@@ -124,25 +129,27 @@ class LayoutGraph():
         """Helper function to get the attributes of a path"""
         return [self.G.nodes(data=True)[p] for p in path]
 
-    def _get_size_of_graph(self):
+    def _size(self) -> int:
         """Get the size of the graph in bytes"""
         return sys.getsizeof(self)
     
-    def get_cost_of_combination(self, combination: List[tuple], startColumn = -1) -> int:
+    def get_cost(self, combination: Combination, startColumn = -1) -> int:
         """Return the cost of a given combination based on Manhattan distance between stations"""
         cost = 0
         
         # Set the initial previous position, either in same column as first position in combination
         # or in the specified start column
-        prevPos = (combination[0][0], -1) if startColumn == -1 else (startColumn, -1)
-        for pos in combination:
-            cost += self.manhattan_distance(prevPos, pos) if prevPos != pos else 2
-            #cost += self.G.nodes[f"{pos[0]}_{pos[1]}"]['type']
-            
-            prevPos = pos
+        prevNode = (combination.nodes[0][0], -1) if startColumn == -1 else (startColumn, -1)
+        for node in combination.nodes:
+            # Adds the cost of moving to the node
+            cost += self.manhattan_distance(prevNode, node) if prevNode != node else 2
+            # Adds the cost of processing at the node
+            cost += self.G.nodes[f"{node[0]}_{node[1]}"]['weight']
+            # We traverse the nodes 
+            prevNode = node
         
         # Add shortest distance to goal lane
-        cost += abs(self.layout['length_y'] - prevPos[1])
+        cost += abs(self.layout['length_y'] - prevNode[1])
         
         return cost
     
@@ -150,25 +157,25 @@ class LayoutGraph():
         """Find the Manhattan distance between pos1 and pos2"""
         return abs(pos2[0] - pos1[0]) + abs(pos2[1] - pos1[1])
     
-    def is_combination_valid(self, combination: List[tuple], mix: dict) -> bool:
+    def is_valid(self, combination: Combination, mix: dict) -> bool:
         """Return whether or not a given combination is valid based on the mix"""
         temp_mix = mix.copy()
         
         # Check that combination is logical (i.e. doesn't move backwards)
-        sorted_combination = sorted(combination, key=lambda x: x[1])
-        if list(combination) != sorted_combination: return False
+        sorted_combination = sorted(combination.nodes, key=lambda x: x[1])
+        if combination.nodes != sorted_combination: return False
         
         # Check that the station types in the combination matches that of the mix
-        for pos in combination:
-            node_type = self.G.nodes[f"{pos[0]}_{pos[1]}"]['type']
+        for pos in combination.nodes:
+            type = self.G.nodes[f"{pos[0]}_{pos[1]}"]['type']
             
-            if node_type in temp_mix and temp_mix[node_type] > 0:
-                temp_mix[node_type] -= 1
+            if type in temp_mix and temp_mix[type] > 0:
+                temp_mix[type] -= 1
             else: return False
         
         return True
     
-    def get_all_valid_combinations_for_mix(self, mix: dict) -> List[tuple]:
+    def get_all_valid_combinations(self, mix: dict) -> list[Combination]:
         """Find all the different combinations of stations for the given mix"""
         # Order the possible stations on the board by station type
         stations_in_mix = {station_type: [] for station_type in mix}
@@ -200,36 +207,18 @@ class LayoutGraph():
         for station_permutation in station_permutations:
             list_iter = [p for p in product(*station_permutation)]
             for item in list_iter:
-                final_combinations.append(item)
-        
-        # Only keep the valid combinations (i.e. those that don't go backwards) and assign the cost
-        final_combinations = [(combination, self.get_cost_of_combination(combination))\
-                               for combination in final_combinations if self.is_combination_valid(combination, mix)]
+                # Convert the item to the correct datatype
+                item = Combination(list(item))
+
+                # Only keep the valid combinations (i.e. those that don't go backwards) and assign the cost
+                if not self.is_valid(item, mix): continue
+
+                final_combinations.append(Combination(item, self.get_cost(item)))
 
         # Return the list containing all the combinations
         return final_combinations
     
-    def get_sorted_best_combinations(self, combination_list: List[tuple], n) -> List[tuple]:
-        """Return a list of the n best combinations from the "combination_list" based on cost 
-        and sorted from best to worst.
-        """
-        if len(combination_list) < n: n = len(combination_list)
-        
-        sorted_combination_list = sorted(combination_list, key=lambda x: x[1])
-        
-        return sorted_combination_list[0:n]
-
-    def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> List[Path]:
-        """TODO: Find all paths for a given mix"""
-
-        raise NotImplementedError("This function is not implemented yet.")
-        
-    def find_shortest_paths_for_mix(self, mix: dict, cutoff: int = None) -> List[Path]:
-        """TODO: Find the shortest paths for a given mix"""
-        
-        raise NotImplementedError("This function is not implemented yet.")
-    
-    def plot_graph(self, color_map: dict):
+    def plot(self, color_map: dict):
         """Plot the graph with the node positions as given in the layout"""
 
         pos = nx.get_node_attributes(self.G,'pos')
@@ -242,8 +231,7 @@ class LayoutGraph():
         nx.draw_networkx(self.G, with_labels=True, font_color='white', node_size=1000, node_color=colors, font_size=8, pos=pos)
         plt.show()
 
-    
-    def reduce_graph(self, combination: List[tuple]):
+    def reduce(self, combination: Combination):
         """Return the reduced graph including free nodes and the nodes contained in the combination"""
         reduced_graph = deepcopy(self)
         
@@ -254,13 +242,28 @@ class LayoutGraph():
             type = self.G.nodes[node]['type']
             
             # If the node is start, end, or free station or it is included in the combination, it should be part of the graph
-            if (type == 'null' or type == 'start' or type == 'end' or pos in list(combination[0])): continue
+            if (type == 'null' or type == 'start' or type == 'end' or pos in combination.nodes): continue
             
             remove_nodes.append(node)
 
         reduced_graph.G.remove_nodes_from(remove_nodes)
         
         return reduced_graph
+        
+    def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
+        """TODO: Find all paths for a given mix"""
+
+        raise NotImplementedError("This function is not implemented yet.")
+        
+    def find_shortest_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
+        """TODO: Find the shortest paths for a given mix"""
+        
+        raise NotImplementedError("This function is not implemented yet.")
+
+
+    
+
+    
         
             
         
