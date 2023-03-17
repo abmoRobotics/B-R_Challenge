@@ -5,6 +5,7 @@ from threading import Timer
 from threading import Thread
 from time import sleep
 from model import Model
+import sys
 
 # static data for connecting
 broker = 'localhost' #192.168.99.110
@@ -16,10 +17,8 @@ client_id = f'python-mqtt-student-machine'
 #Global variables
 sleeper = 3 #sec
 
-
-  
 # Opening JSON files
-f = open('./data/board.feed.data.json')
+f = open('example_program/py/data/board.feed.data.json')
 board = json.load(f)
 f.close()
 
