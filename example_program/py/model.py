@@ -2,9 +2,9 @@ import json, sys
 
 class Model:
     def __init__(self):
-        f = open('./data/board.movements.json')
+        f = open('example_program/py/data/board.movements.json')
         movements = json.load(f)
-        f = open('./data/board.shuttles.json')
+        f = open('example_program/py/data/board.shuttles.json')
         shuttles = json.load(f)
         self.movements = movements
         self.shuttles = shuttles
