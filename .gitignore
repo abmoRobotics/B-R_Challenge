@@ -1,6 +1,8 @@
 ### ADDED IGNORES ###
 /backend/node_modules/
 /frontend/node_modules/
+.vs/
+LegoChallenge/
 
 ### PYTHON BOILER PLATE ###
 # Byte-compiled / optimized / DLL files
