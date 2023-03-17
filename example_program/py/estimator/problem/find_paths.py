@@ -65,21 +65,17 @@ VARIANT_MIXES = {
 print('Creating graph...')
 graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
 
-# Create mix specific graphs
-graphMixes = {mix_type: deepcopy(graphGlobal) for mix_type in VARIANT_MIXES}
+# Calculate the best combinations of stations for the different mixes
 combinations = {}
 for mix_type in VARIANT_MIXES:
-    # Reducing the graph corresponding to the given mix and plotting the result
-    graphMixes[mix_type].reduce_graph(VARIANT_MIXES[mix_type])
-    #graphMixes[mix].plot_graph(COLOR_MAP)
+    # Obtaining all the valid combinations and corresponding cost
+    combinations[mix_type] = graphGlobal.get_all_valid_combinations_for_mix(VARIANT_MIXES[mix_type])
     
-    # Obtaining all the combinations for the mix and saving the corresponding cost
-    combinations[mix_type] = graphMixes[mix_type].find_all_combinations_for_mix(VARIANT_MIXES[mix_type])
-    for idx, combination in enumerate(combinations[mix_type]):
-        if graphGlobal.is_combination_valid(combination, VARIANT_MIXES[mix_type]):
-            combinations[mix_type][idx] = (combination, graphMixes[mix_type].get_cost_of_combination(combination))
-        else:
-            raise Exception('Not a valid combination for mix')
+    # Keep only the 50 best combinations in order from best to worst
+    combinations[mix_type] = graphGlobal.get_sorted_best_combinations(combinations[mix_type], 50)
+
+reduced_graph = graphGlobal.reduce_graph(combinations['mix_a'][0])
+reduced_graph.plot_graph(COLOR_MAP)
 
 # Call the algorithm to find the shortest or all paths for the variant mix
 

@@ -4,6 +4,7 @@ from typing import List
 from itertools import product
 from more_itertools import distinct_permutations
 import sys
+from copy import deepcopy
 
 class Path():
     """A more sohisticated path class that can be used to store a path in the graph and
@@ -136,6 +137,8 @@ class LayoutGraph():
         prevPos = (combination[0][0], -1) if startColumn == -1 else (startColumn, -1)
         for pos in combination:
             cost += self.manhattan_distance(prevPos, pos) if prevPos != pos else 2
+            #cost += self.G.nodes[f"{pos[0]}_{pos[1]}"]['type']
+            
             prevPos = pos
         
         # Add shortest distance to goal lane
@@ -151,6 +154,11 @@ class LayoutGraph():
         """Return whether or not a given combination is valid based on the mix"""
         temp_mix = mix.copy()
         
+        # Check that combination is logical (i.e. doesn't move backwards)
+        sorted_combination = sorted(combination, key=lambda x: x[1])
+        if list(combination) != sorted_combination: return False
+        
+        # Check that the station types in the combination matches that of the mix
         for pos in combination:
             node_type = self.G.nodes[f"{pos[0]}_{pos[1]}"]['type']
             
@@ -160,7 +168,7 @@ class LayoutGraph():
         
         return True
     
-    def find_all_combinations_for_mix(self, mix: dict):
+    def get_all_valid_combinations_for_mix(self, mix: dict) -> List[tuple]:
         """Find all the different combinations of stations for the given mix"""
         # Order the possible stations on the board by station type
         stations_in_mix = {station_type: [] for station_type in mix}
@@ -193,31 +201,23 @@ class LayoutGraph():
             list_iter = [p for p in product(*station_permutation)]
             for item in list_iter:
                 final_combinations.append(item)
+        
+        # Only keep the valid combinations (i.e. those that don't go backwards) and assign the cost
+        final_combinations = [(combination, self.get_cost_of_combination(combination))\
+                               for combination in final_combinations if self.is_combination_valid(combination, mix)]
 
         # Return the list containing all the combinations
         return final_combinations
-        
     
-    def find_best_combinations_for_mix(self, mix: dict, n: int) -> List[List[str]]:
-        """Find the n best combinations for the mix in order from best to worst"""
-        combination_list = []
-        stations_in_mix = {}
-        stations_in_mix['type'] = {station_type: [] for station_type in mix}
-        stations_in_mix['row'] = {i: [] for i in range(self.layout['length_x'])}
+    def get_sorted_best_combinations(self, combination_list: List[tuple], n) -> List[tuple]:
+        """Return a list of the n best combinations from the "combination_list" based on cost 
+        and sorted from best to worst.
+        """
+        if len(combination_list) < n: n = len(combination_list)
         
-        # Append the positions of the stations from the graph
-        for node in self.G.nodes:
-            node_type = self.G.nodes[node]['type']
-            if node_type in mix:
-                stations_in_mix['type'][node_type].append(self.G.nodes[node]['pos'])
-                
-                row = self.G.nodes[node]['pos'][1]
-                stations_in_mix['row'][row].append((node_type, self.G.nodes[node]['pos']))
+        sorted_combination_list = sorted(combination_list, key=lambda x: x[1])
         
-        # NOT DONE
-        
-        return combination_list
-    
+        return sorted_combination_list[0:n]
 
     def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> List[Path]:
         """TODO: Find all paths for a given mix"""
@@ -242,17 +242,44 @@ class LayoutGraph():
         nx.draw_networkx(self.G, with_labels=True, font_color='white', node_size=1000, node_color=colors, font_size=8, pos=pos)
         plt.show()
 
-    def reduce_graph(self, mix: dict):
-        remove_nodes = []
+    
+    def reduce_graph(self, combination: List[tuple]):
+        """Return the reduced graph including free nodes and the nodes contained in the combination"""
+        reduced_graph = deepcopy(self)
         
+        remove_nodes = []
         for node in self.G:
-            node_type = self.G.nodes[node]['type']
+            # Getting the position and type of the node
+            pos = self.G.nodes[node]['pos']
+            type = self.G.nodes[node]['type']
             
-            # If the node is start, end, or free station or it is included in the mix, it should be part of the graph
-            if (node_type == 'null' or node_type == 'start' or node_type == 'hand' or node_type == 'end')\
-                or (node_type in mix and mix[node_type] > 0):
-                continue
+            # If the node is start, end, or free station or it is included in the combination, it should be part of the graph
+            if (type == 'null' or type == 'start' or type == 'end' or pos in list(combination[0])): continue
             
             remove_nodes.append(node)
+
+        reduced_graph.G.remove_nodes_from(remove_nodes)
         
-        self.G.remove_nodes_from(remove_nodes)
+        return reduced_graph
+        
+            
+        
+    # def find_best_combinations_for_mix(self, mix: dict, n: int) -> List[List[str]]:
+    #     """Find the n best combinations for the mix in order from best to worst"""
+    #     combination_list = []
+    #     stations_in_mix = {}
+    #     stations_in_mix['type'] = {station_type: [] for station_type in mix}
+    #     stations_in_mix['row'] = {i: [] for i in range(self.layout['length_x'])}
+        
+    #     # Append the positions of the stations from the graph
+    #     for node in self.G.nodes:
+    #         node_type = self.G.nodes[node]['type']
+    #         if node_type in mix:
+    #             stations_in_mix['type'][node_type].append(self.G.nodes[node]['pos'])
+                
+    #             row = self.G.nodes[node]['pos'][1]
+    #             stations_in_mix['row'][row].append((node_type, self.G.nodes[node]['pos']))
+        
+    #     # NOT DONE
+        
+    #     return combination_list
