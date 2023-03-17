@@ -74,6 +74,15 @@ for mix_type in VARIANT_MIXES:
     # Keep only the 50 best combinations in order from best to worst
     combinations[mix_type] = get_sorted_best_combinations(combinations[mix_type], 50)
 
+### FOR TESTING ###
+best_combination = get_best_combination(combinations['mix_a'])
+
+path = []
+for pos in best_combination.nodes:
+    path.append(graphGlobal.G.nodes[f'{pos[0]}_{pos[1]}'])
+
+graphGlobal.update_weights(Path(path), combinations)
+### FOR TESTING ###
 
 
 # Call the algorithm to find the shortest or all paths for the variant mix
