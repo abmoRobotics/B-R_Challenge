@@ -217,7 +217,35 @@ class LayoutGraph():
 
         # Return the list containing all the combinations
         return final_combinations
+        
+    def update_weights(self, path: Path, mix_combinations: dict, reset_weights: bool = False):
+        """Update the graph and combination weights based on a path. The added (or subtracted if 
+        reset_weights is true) weights correspond to the weight of the given node type in that position"""
+        # Determine the sign corresponding to whether we are about to start the path (reset_weights = false)
+        # or have just ended the path (reset_weights)
+        sign = 1 if not reset_weights else -1
+        
+        # Go through the nodes and the corresponding edges in the path and the different combinations
+        for node in path.nodes:
+            # Update the node weight (if sign is 1 we add the weight and if sign is -1 we subtract the weight)
+            weight = self.weights[node['type']]
+            self.G.nodes[node['name']]['weight'] += sign*weight
+            
+            # Update the edges going into this node to this weight
+            in_edges = self.G.in_edges(node['name'])
+            for edge in in_edges:
+                self.G.edges[edge]['weight'] += sign*weight
 
+            # If the node is not a station, just continue to next node
+            if node['type'] in ('null', 'start', 'end'): continue
+            
+            # Update the weights of the combinations that include atleast one node from the path
+            for mix in mix_combinations:
+                for combination in mix_combinations[mix]:
+                    if node['pos'] in combination.nodes:
+                        weight *= combination.nodes.count(node['pos'])
+                        combination.cost += sign*weight
+        
     def reduce(self, combination: Combination):
         """Return the reduced graph including free nodes and the nodes contained in the combination"""
         reduced_graph = deepcopy(self)
@@ -229,31 +257,13 @@ class LayoutGraph():
             type = self.G.nodes[node]['type']
             
             # If the node is start, end, or free station or it is included in the combination, it should be part of the graph
-            if (type == 'null' or type == 'start' or type == 'end' or pos in combination.nodes): continue
+            if (type in ('null', 'start', 'end') or pos in combination.nodes): continue
             
             remove_nodes.append(node)
 
         reduced_graph.G.remove_nodes_from(remove_nodes)
         
         return reduced_graph
-        
-    def update_graph_weights(self, path: Path, reset_weights: bool = False):
-        """Update the graph weights based on a path. The added (or subtracted if reset_weights is true) 
-        weights correspond to the weight of the given node type in that position"""
-        # Determine the sign corresponding to whether we are about to start the path (reset_weights = false)
-        # or have just ended the path (reset_weights)
-        sign = 1 if not reset_weights else -1
-        
-        # Go through the nodes and the corresponding edges in the path
-        for node in path.nodes:
-            # Update the node weight (if sign is 1 we add the weight and if sign is -1 we subtract the weight)
-            self.G.nodes[node['name']]['weight'] += sign*self.weights[node['type']]
-            
-            # Update the edges going into this node to this weight
-            in_edges = self.G.in_edges(node['name'])
-            for edge in in_edges:
-                self.G.edges[edge]['weight'] = self.G.nodes[node['name']]['weight']
-    
     
     def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
         """TODO: Find all paths for a given mix"""
