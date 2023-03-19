@@ -115,6 +115,17 @@ class Model:
         
         return isMoveReset
     
+    def get_stations_to_visit (self, mixId):
+        """Get a list of stations to visit for a given mix
+        Parameters:
+            mixId {string} -- The mix id
+        Returns: 
+            stations_to_visit {list} -- A list of stations to visit
+        """
+        # TODO: Implement method
+
+        raise NotImplementedError("get_stations_to_visit not implemented")
+
     def find_optimal_path_from_stations (self, stations_to_visit):
         """Find the optimal path from a list of stations to the next station
         
