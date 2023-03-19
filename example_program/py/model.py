@@ -115,6 +115,28 @@ class Model:
         
         return isMoveReset
     
+    def find_optimal_path_from_stations (self, stations_to_visit):
+        """Find the optimal path from a list of stations to the next station
+        
+        Arguments:
+            stations {list} -- A list of stations
+            
+        Returns:
+            path {list} -- A list of nodes in the optimal path}
+        """
+        
+        path = []
+
+        for i in range(len(stations_to_visit-1)):
+            current_station = stations_to_visit[i]
+            next_station = stations_to_visit[i+1]
+            shortest_path = nx.shortest_path(self.G, current_station, next_station, weight='weight')    
+            path += shortest_path[:-1] # Remove the last node since it is the next station
+
+        path.append(stations_to_visit[-1]) # Add the last station to the path
+
+        return path
+    
     def get_start_station (self, mixId):
         # TODO: Implement your own method
         optimalCost = sys.maxsize
