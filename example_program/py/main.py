@@ -6,6 +6,20 @@ from threading import Thread
 from time import sleep
 from model import Model
 
+# Testing
+def test():
+    print("Hello world")
+from interface import Interface
+Connection = Interface("localhost", 1883)
+Connection.OnMixDone = Connection.Stop
+Connection.Start()
+
+
+
+
+
+
+
 # static data for connecting
 broker = 'localhost' #192.168.99.110
 port = 1883

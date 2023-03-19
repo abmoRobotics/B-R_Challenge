@@ -36,7 +36,7 @@ class Model:
     def get_next_mix (self, shuttleId):
         '''Get the next mix with the least orders currently in progress (least WIP)'''
         mix = None
-        mix_least_WIP = sys.maxsize()
+        mix_least_WIP = sys.maxsize
         for order in self.finished_orders:
             if (order['started'] < order['quantity']) and (order['started'] - order['completed']) < mix_least_WIP: 
                 mix_least_WIP = order['started'] - order['completed']

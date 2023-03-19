@@ -3,6 +3,7 @@ from enum import Enum
 # class syntax
 class Commands(Enum):
     CONF= "CONF"
+    SET_CONF= "SET_CONF"
     MOVE= "MOVE"
     MOVE_DONE= "MOVE_DONE"
     PROCESSING= "PROCESSING"
@@ -10,7 +11,6 @@ class Commands(Enum):
     MIX_STARTED= "MIX_STARTED"
     MIX_ENDED= "MIX_ENDED"
     ORDER_UPDATED= "ORDER_UPDATED"
-    SET_CONF= "SET_CONF"
     MOVE_SHUTTLE_TO= "MOVE_SHUTTLE_TO"
     SET_SHUTTLE_MIX= "SET_SHUTTLE_MIX"
     MOVE_SHUTTLE_DIR= "MOVE_SHUTTLE_DIR"
