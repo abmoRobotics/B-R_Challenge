@@ -7,10 +7,10 @@ Step 2: Generate all combinations for each mix, (SOLVED)
 Runtime:
 // Internal
 Step 3: Given a specific mix, we return the best combination at a given time. (ROB6)
-Step 4: Use the combination and the current global graph, to generate a path (ANTON)
+Step 4: Use the combination and the current global graph, to generate a path (SOLVED)
 Step 5: Use the path to update the current weight in the global graph. (TODO)
 // External
-Step 6: USe the path to make the shuttle move (TODO)
+Step 6: USe the path to make the shuttle move (Anton)
 
 
 
