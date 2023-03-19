@@ -4,9 +4,9 @@ from estimator.problem.LayoutGraphOptimizer.utils import get_movement_instructio
 from estimator.problem.LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path
 class Model:
     def __init__(self):
-        f = open('./data/board.movements.json')
+        f = open('example_program/py/data/board.movements.json')
         movements = json.load(f)
-        f = open('./data/board.shuttles.json')
+        f = open('example_program/py/data/board.shuttles.json')
         shuttles = json.load(f)
         self.movements = movements
         self.shuttles = shuttles
@@ -33,13 +33,13 @@ class Model:
         return mixes
     
     def get_next_mix (self, shuttleId):
-        # TODO: Implement your own method 
+        '''Get the next mix with the least orders currently in progress (least WIP)'''
         mix = None
+        mix_least_WIP = sys.maxsize()
         for order in self.finished_orders:
-            # order = self.finished_orders[j]
-            if (order['started'] < order['quantity']):
+            if (order['started'] < order['quantity']) and (order['started'] - order['completed']) < mix_least_WIP: 
+                mix_least_WIP = order['started'] - order['completed']
                 mix = order['id']
-                break
 
         for shuttle in self.shuttles:
             if shuttle['shuttleId'] == shuttleId:
@@ -208,3 +208,4 @@ class Model:
 
     def get_finished_orders (self):
         return self.finished_orders
+    
