@@ -19,7 +19,7 @@ sleeper = 3 #sec
 
   
 # Opening JSON files
-f = open('./data/board.feed.data.json')
+f = open('example_program/py/data/board.feed.data.json')
 board = json.load(f)
 f.close()
 
