@@ -1,5 +1,7 @@
 import json, sys
 import networkx as nx
+from estimator.problem.LayoutGraphOptimizer.utils import get_movement_instructions_from_path
+from estimator.problem.LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path
 class Model:
     def __init__(self):
         f = open('./data/board.movements.json')
@@ -175,12 +177,12 @@ class Model:
 
         return { 'cost': optimalCost, 'pos': optimalPos, 'start': optimalStartingPos }
     
-    def set_next_movement (self, shuttleId, mixId, startStation):
+    def set_next_movement (self, shuttleId, mixId, movements):
         # TODO: Implement your own method
         for shuttle in self.shuttles:
             if (shuttle['shuttleId'] == shuttleId):
                 shuttle['currentMix'] = mixId
-                shuttle['movements'] = self.movements[mixId][startStation['start']][startStation['pos']]['instr']
+                shuttle['movements'] = movements
                 shuttle['intialMixSet'] = True
                 shuttle['currentMovePos'] = -1
     

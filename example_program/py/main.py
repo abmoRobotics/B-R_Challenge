@@ -173,9 +173,11 @@ def switch_status (client: mqtt_client, telegram):
 
                 # if a mix is returned - i.e. something is left to gather, we build the name of the start station and set next movement.
                 if (mix is not None):
-                    newStartStation = model.get_start_station(mix)
-                    startStation= ('Start_0'+ newStartStation['start'])
-                    model.set_next_movement(telegram['data']['shuttleId'], mix, newStartStation)
+                    StationsToVisit = model.get_stations_to_visit(mix) # TODO: make sure this is correct
+                    shortestPath = model.get_shortest_path(StationsToVisit)
+                    movements, startPos = model.convert_node_path_to_movements(shortestPath)
+                    startStation = ('Start_0' + startPos)
+                    model.set_next_movement(telegram['data']['shuttleId'], mix, movements)
 
             if weAreFinshed:
                 # If we are finished, we only want to move the shuttle to a start station and do nothing else
