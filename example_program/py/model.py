@@ -147,6 +147,20 @@ class Model:
         path.append('end')
         return path
     
+    def convert_node_path_to_movements (self, path):
+        """Convert a path of nodes to a list of directions
+        
+        Arguments:
+            path {list} -- A list of nodes in the path
+        
+        Returns:
+            directions {list} -- A list of directions
+        """
+        node_data = [self.G.nodes[node] for node in path]
+        path = Path(node_data)
+        directions = get_movement_instructions_from_path(path)
+        return directions
+
     def get_start_station (self, mixId):
         # TODO: Implement your own method
         optimalCost = sys.maxsize
