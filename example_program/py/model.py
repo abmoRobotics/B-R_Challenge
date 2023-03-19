@@ -137,16 +137,26 @@ class Model:
         Returns:
             path {list} -- A list of nodes in the optimal path}
         """
-        
-        path = ['start']
+        # add start and end nodes to the list of stations to visit
+        stations_to_visit = ['start'] + stations_to_visit + ['end']
+
+        # Remove nodes that are not available for the route.
+        local_graph = self.G.copy()
+        removed = []
+        for node in local_graph.copy().nodes:
+            if local_graph.nodes[node]['type'] != 'null' and node not in stations_to_visit:
+                local_graph.remove_node(node)
+                removed.append(node)
+                
+        # Find the optimal path
+        path = []
         for i in range(len(stations_to_visit)-1):
             current_station = stations_to_visit[i]
             next_station = stations_to_visit[i+1]
-            shortest_path = nx.shortest_path(self.G, current_station, next_station, weight='weight')    
+            shortest_path = nx.shortest_path(local_graph, current_station, next_station, weight='weight')    
             path += shortest_path[:-1] # Remove the last node since it is the next station
 
-        path.append(stations_to_visit[-1]) # Add the last station to the path
-        path.append('end')
+        path.append(stations_to_visit[-1]) # Add the last station to the path# Add the end node to the path
         return path
     
     def convert_node_path_to_movements (self, path):
