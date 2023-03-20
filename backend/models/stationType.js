@@ -1,4 +1,6 @@
 'use strict'
+
+const MAIN = require('../enum/main.json');
 module.exports = class StationType {
     /**
      * Station type
@@ -8,7 +10,7 @@ module.exports = class StationType {
     constructor (color, time) {
         this.color = color;
         this.orgColor = color;
-        this.time = time;
+        this.time = (MAIN.HEADLESS) ? 0 : time;
     }
 
     getColor = () => {

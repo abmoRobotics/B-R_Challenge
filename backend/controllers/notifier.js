@@ -1,5 +1,6 @@
 const url = require("url");
 const { Server } = require("ws");
+const MAIN = require('../enum/main.json');
 
 /**
  * This class will create a websocket to the front end so that data can be pushed
@@ -43,7 +44,7 @@ class NotifierService {
 
     var enc = new TextEncoder('utf-8');
     var data = enc.encode(JSON.stringify(message));
-    if (connection) {
+    if (connection && !MAIN.HEADLESS) {
       try {
         connection.send(data);
       } catch (err) {
