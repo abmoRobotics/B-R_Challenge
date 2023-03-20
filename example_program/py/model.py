@@ -1,10 +1,10 @@
 import json, sys
 import networkx as nx
-from estimator.problem.LayoutGraphOptimizer.utils import get_movement_instructions_from_path
-from estimator.problem.LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path
+from estimator.problem.LayoutGraphOptimizer.utils import get_movement_instructions_from_path, get_best_combination
+from estimator.problem.LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path, Combination
 
 class Model:
-    def __init__(self):
+    def __init__(self, graph: LayoutGraph, combinations: dict):
         f = open('example_program/py/data/board.movements.json')
         movements = json.load(f)
         f = open('example_program/py/data/board.shuttles.json')
@@ -13,7 +13,8 @@ class Model:
         self.shuttles = shuttles
         self.finished_orders = {}
         self.once = 0
-
+        self.graph = graph
+        self.combinations = combinations
 
     def get_initial_mixes(self, columns):
         # TODO: Implement your own method
@@ -36,7 +37,7 @@ class Model:
     def get_next_mix (self, shuttleId):
         '''Get the next mix with the least orders currently in progress (least WIP)'''
         mix = None
-        mix_least_WIP = sys.maxsize()
+        mix_least_WIP = sys.maxsize
         for order in self.finished_orders:
             if (order['started'] < order['quantity']) and (order['started'] - order['completed']) < mix_least_WIP: 
                 mix_least_WIP = order['started'] - order['completed']
@@ -49,7 +50,6 @@ class Model:
 
         return mix
     
-
     def get_current_mix (self, shuttleId):
         # TODO: Implement your own method
         mix = None
@@ -117,61 +117,62 @@ class Model:
         
         return isMoveReset
     
-    def get_stations_to_visit (self, mixId):
+    def get_next_path_segment(self, shuttleId, path : Path):
+        raise("get_next_path_segment not implemented")
+    
+    def get_stations_to_visit (self, mixId) -> list[str]:
         """Get a list of stations to visit for a given mix
         Parameters:
             mixId {string} -- The mix id
         Returns: 
             stations_to_visit {list} -- A list of stations to visit
         """
-        # TODO: Implement method
+        best_combination = get_best_combination(self.combinations[mixId])
+        
+        stations_to_visit = []
+        for node in best_combination.nodes:
+            stations_to_visit.append(f'{node[0]}_{node[1]}')
+        
+        return stations_to_visit
 
-        raise NotImplementedError("get_stations_to_visit not implemented")
-
-    def find_optimal_path_from_stations (self, stations_to_visit):
+    def find_optimal_path_from_stations (self, stations_to_visit) -> Path:
         """Find the optimal path from a list of stations to the next station
         
         Arguments:
             stations {list} -- A list of stations
             
         Returns:
-            path {list} -- A list of nodes in the optimal path}
+            path {Path} -- The path consisting of the nodes to visit
         """
-        # add start and end nodes to the list of stations to visit
-        stations_to_visit = ['start'] + stations_to_visit + ['end']
-
+        
         # Remove nodes that are not available for the route.
-        local_graph = self.G.copy()
-        removed = []
-        for node in local_graph.copy().nodes:
-            if local_graph.nodes[node]['type'] != 'null' and node not in stations_to_visit:
-                local_graph.remove_node(node)
-                removed.append(node)
-                
+        reduced_graph = self.graph.reduce(stations_to_visit)
+        
+        # Add start and end nodes to the list of stations to visit
+        stations_to_visit = ['start'] + stations_to_visit + ['end']        
+        
         # Find the optimal path
-        path = []
+        path_nodes = []
+        path_node_segments = {}
         for i in range(len(stations_to_visit)-1):
             current_station = stations_to_visit[i]
             next_station = stations_to_visit[i+1]
-            shortest_path = nx.shortest_path(local_graph, current_station, next_station, weight='weight')    
-            path += shortest_path[:-1] # Remove the last node since it is the next station
+            
+            # Find the shortest path to the next station
+            nodes_shortest_path = nx.shortest_path(reduced_graph.G, current_station, next_station, weight='weight')    
+            
+            # Append the local path to the full path
+            path_nodes += nodes_shortest_path[:-1] # Remove the last node since it is the next station
+            path_node_segments[i] = nodes_shortest_path[:-1]
 
-        path.append(stations_to_visit[-1]) # Add the last station to the path# Add the end node to the path
-        return path
-    
-    def convert_node_path_to_movements (self, path):
-        """Convert a path of nodes to a list of directions
         
-        Arguments:
-            path {list} -- A list of nodes in the path
+        path_nodes.append(stations_to_visit[-1]) # Add the last station to the path# Add the end node to the path
+        path_node_segments[i] = stations_to_visit[-1]
         
-        Returns:
-            directions {list} -- A list of directions
-        """
-        node_data = [self.G.nodes[node] for node in path]
-        path = Path(node_data)
-        directions = get_movement_instructions_from_path(path)
-        return directions
+        # Convert to actual nodes in the networkx format
+        path_nodes = [self.graph.G.nodes[node] for node in path_nodes]
+        
+        return Path(path_nodes)
 
     def get_start_station (self, mixId):
         # TODO: Implement your own method

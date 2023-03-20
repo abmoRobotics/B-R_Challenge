@@ -83,7 +83,7 @@ def get_movement_instructions_from_path(path: Path):
     
     # Calculate the start row as the direct position under the first node in the path (ignore the start node in the graph)
     start_row = path[1]['pos'][0]
-
+    
     return movement_instructions, start_row
 
 def get_sorted_best_combinations(combination_list: list[Combination], n) -> list[Combination]:
