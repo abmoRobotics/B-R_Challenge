@@ -4,7 +4,8 @@ from commands_enum import Commands
 from threading import Timer
 from threading import Thread
 from time import sleep
-from model import Model
+from model import Model, get_movement_instructions_from_path
+from estimator.problem.find_paths import global_graph, reduced_combinations
 
 # static data for connecting
 broker = 'localhost' #192.168.99.110
@@ -24,7 +25,7 @@ board = json.load(f)
 f.close()
 
 # Start our model
-model = Model()
+model = Model(global_graph, reduced_combinations)
 
 def threadedNextMove(client: mqtt_client, id, dir):
     # Timer(2, getDeferredNextMove, (client, id, dir))
@@ -107,6 +108,7 @@ def switch_status (client: mqtt_client, telegram):
                 send_data(client, move_telegram)
             
     elif telegram['method'] == "PROCESSING_DONE":
+        
         dir = model.get_next_move(telegram['data']['shuttleId'])
         if (dir is not None):
             move_telegram = { "method": "MOVE_SHUTTLE_TO", "id": telegram['data']['shuttleId'], "direction": dir }
@@ -173,11 +175,21 @@ def switch_status (client: mqtt_client, telegram):
 
                 # if a mix is returned - i.e. something is left to gather, we build the name of the start station and set next movement.
                 if (mix is not None):
-                    StationsToVisit = model.get_stations_to_visit(mix) # TODO: make sure this is correct
-                    shortestPath = model.get_shortest_path(StationsToVisit)
-                    movements, startPos = model.convert_node_path_to_movements(shortestPath)
-                    startStation = ('Start_0' + startPos)
+                    # Get the best combination of stations to visit based on the mix
+                    stationsToVisit = model.get_stations_to_visit(mix)
+                    
+                    # Find the shortest path going through these stations (and no others)
+                    shortestPath = model.find_optimal_path_from_stations(stationsToVisit)
+                    
+                    # Convert the path to movements
+                    movements, startPos = get_movement_instructions_from_path(shortestPath)
+                    startStation = ('Start_0' + str(startPos))
+                    
+                    # Set the next movement for the given shuttle
                     model.set_next_movement(telegram['data']['shuttleId'], mix, movements)
+                    
+                    # Update the global graph in the model based on the chosen path
+                    model.graph.update_weights(shortestPath, model.combinations)
 
             if weAreFinshed:
                 # If we are finished, we only want to move the shuttle to a start station and do nothing else

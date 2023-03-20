@@ -227,6 +227,8 @@ class LayoutGraph():
         
         # Go through the nodes and the corresponding edges in the path and the different combinations
         for node in path.nodes:
+            if self.G.nodes[node['name']]['type'] not in self.weights: continue
+            
             # Update the node weight (if sign is 1 we add the weight and if sign is -1 we subtract the weight)
             weight = self.weights[node['type']]
             self.G.nodes[node['name']]['weight'] += sign*weight
@@ -246,18 +248,17 @@ class LayoutGraph():
                         weight *= combination.nodes.count(node['pos'])
                         combination.cost += sign*weight
         
-    def reduce(self, combination: Combination):
-        """Return the reduced graph including free nodes and the nodes contained in the combination"""
+    def reduce(self, stations_to_visit = list[str]):
+        """Return the reduced graph including free nodes and the nodes contained in the stations to visit"""
         reduced_graph = deepcopy(self)
         
         remove_nodes = []
         for node in self.G:
             # Getting the position and type of the node
-            pos = self.G.nodes[node]['pos']
             type = self.G.nodes[node]['type']
             
             # If the node is start, end, or free station or it is included in the combination, it should be part of the graph
-            if (type in ('null', 'start', 'end') or pos in combination.nodes): continue
+            if (type in ('null', 'start', 'end') or node in stations_to_visit): continue
             
             remove_nodes.append(node)
 
