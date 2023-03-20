@@ -2,6 +2,7 @@ import json, sys
 import networkx as nx
 from estimator.problem.LayoutGraphOptimizer.utils import get_movement_instructions_from_path
 from estimator.problem.LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path
+
 class Model:
     def __init__(self):
         f = open('example_program/py/data/board.movements.json')
@@ -81,7 +82,6 @@ class Model:
             })
 
         return moves
-
     
     def get_next_move (self, shuttleId):
         # TODO: Implement your own method
@@ -201,7 +201,6 @@ class Model:
 
     def getOnce (self):
         return self.once
-    
 
     def set_finished_orders (self, finished_orders):
         self.finished_orders = finished_orders

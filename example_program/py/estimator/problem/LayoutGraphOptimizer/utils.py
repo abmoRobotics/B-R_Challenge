@@ -2,8 +2,7 @@ import networkx as nx
 import numpy as np
 import random
 
-from .LayoutGraph import LayoutGraph
-from .LayoutGraph import Path
+from .LayoutGraph import LayoutGraph, Path, Combination
 
 
 def random_layout(length_x, length_y, node_types):
@@ -16,13 +15,10 @@ def find_paths(layout, weights, prod_order) -> dict:
 
     raise NotImplementedError("This function is not implemented yet.")
 
-
 def calculate_costs(paths, prod_order, layout, station_placement_cost):
     """TODO: Create a cost function that takes the paths and the layout and returns the overall cost of the production order"""
 
     raise NotImplementedError("This function is not implemented yet.")
-    
-
 
 def get_movement_instructions_from_path(path: Path):
     """Get the movement instructions and start position for a given path"""
@@ -89,3 +85,16 @@ def get_movement_instructions_from_path(path: Path):
     start_row = path[1]['pos'][0]
 
     return movement_instructions, start_row
+
+def get_sorted_best_combinations(combination_list: list[Combination], n) -> list[Combination]:
+    """Return a list of the n best combinations from the "combination_list" based on cost 
+    and sorted from best to worst.
+    """
+    if len(combination_list) < n: n = len(combination_list)
+    
+    sorted_combination_list = sorted(combination_list, key=lambda x: x.cost)
+    
+    return sorted_combination_list[0:n]
+
+def get_best_combination(combinations: list[Combination]) -> Combination:
+    return min(combinations, key=lambda x : x.cost)

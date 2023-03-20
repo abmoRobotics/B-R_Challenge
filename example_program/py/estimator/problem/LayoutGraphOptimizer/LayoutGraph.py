@@ -1,6 +1,16 @@
+import sys
 import networkx as nx
 import matplotlib.pyplot as plt
-from typing import List
+from itertools import product
+from more_itertools import distinct_permutations
+from copy import deepcopy
+
+class Combination():
+    """Defines a simple datastructure that represents a combination"""
+    def __init__(self, nodes: list, cost: int = sys.maxsize):
+        self.nodes = nodes
+        self.cost = cost
+
 
 class Path():
     """A more sohisticated path class that can be used to store a path in the graph and
@@ -42,7 +52,6 @@ class LayoutGraph():
     """Class that represents a graph model of a layout and provides methods
     to find shortest paths for specific variant mixes to be manufactured.
     """
-
     def __init__(self, layout: dict, weights: dict):
         """Construct a graph from a layout and weights
 
@@ -94,16 +103,25 @@ class LayoutGraph():
                     node_color_left = layout['nodes'][indx_left]
                     self.G.add_edge(f"{x}_{y}", f"{x-1}_{y}", weight=weights[node_color_left])
 
-        # Add start and end node
-        self.G.add_node('start', pos=(round(layout['length_x']/2), -1), type='start', weight=0, name='start')
-        self.G.add_node('end', pos=(round(layout['length_x']/2), layout['length_y']), type='end', weight=0, name='end')
-
-        # Add nodes from start to first row
+        # Add nodes and edges for starting lane
         for x in range(0, layout['length_x']):
-            self.G.add_edge('start', f"{x}_0", weight=0)
+            self.G.add_node(f"{x}_start", pos=(x, -1), type='null', weight=0, name=f"{x}_start")
         
+        for x in range(0, layout['length_x']):
+            if x > 0: self.G.add_edge(f"{x}_start", f"{x-1}_start", weight=0) # Left
+            if x < layout['length_x'] - 1: self.G.add_edge(f"{x}_start", f"{x+1}_start", weight=0) # Right
+            self.G.add_edge(f"{x}_start", f"{x}_0", weight=weights[layout['nodes'][x]]) # Up
+        
+        # Add start and end node
+        self.G.add_node('start', pos=(layout['length_x'], -1), type='start', weight=0, name='start')
+        self.G.add_node('end', pos=(round(layout['length_x']/2) - 1, layout['length_y']), type='end', weight=0, name='end')
 
-        # Add nodes from last row to end
+        # Add edges from start to first node in start lane
+        # for x in range(0, layout['length_x']):
+        #     self.G.add_edge('start', f"{x}_0", weight=0)
+        self.G.add_edge('start', f"{layout['length_x']-1}_start", weight=0)
+        
+        # Add edges from last row to end
         for x in range(0, layout['length_x']):
             self.G.add_edge(f"{x}_{layout['length_y']-1}", 'end', weight=0)
 
@@ -111,18 +129,154 @@ class LayoutGraph():
         """Helper function to get the attributes of a path"""
         return [self.G.nodes(data=True)[p] for p in path]
 
-    def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> List[Path]:
+    def _size(self) -> int:
+        """Get the size of the graph in bytes"""
+        return sys.getsizeof(self)
+    
+    def get_cost(self, combination: Combination, startColumn = -1) -> int:
+        """Return the cost of a given combination based on Manhattan distance between stations"""
+        cost = 0
+        
+        # Set the initial previous position, either in same column as first position in combination
+        # or in the specified start column
+        prevNode = (combination.nodes[0][0], -1) if startColumn == -1 else (startColumn, -1)
+        for node in combination.nodes:
+            # Adds the cost of moving to the node
+            cost += self.manhattan_distance(prevNode, node) if prevNode != node else 2
+            # Adds the cost of processing at the node
+            cost += self.G.nodes[f"{node[0]}_{node[1]}"]['weight']
+            # We traverse the nodes 
+            prevNode = node
+        
+        # Add shortest distance to goal lane
+        cost += abs(self.layout['length_y'] - prevNode[1])
+        
+        return cost
+    
+    def manhattan_distance(self, pos1, pos2) -> int:
+        """Find the Manhattan distance between pos1 and pos2"""
+        return abs(pos2[0] - pos1[0]) + abs(pos2[1] - pos1[1])
+    
+    def is_valid(self, combination: Combination, mix: dict) -> bool:
+        """Return whether or not a given combination is valid based on the mix"""
+        temp_mix = mix.copy()
+        
+        # Check that combination is logical (i.e. doesn't move backwards)
+        sorted_combination = sorted(combination.nodes, key=lambda x: x[1])
+        if combination.nodes != sorted_combination: return False
+        
+        # Check that the station types in the combination matches that of the mix
+        for pos in combination.nodes:
+            type = self.G.nodes[f"{pos[0]}_{pos[1]}"]['type']
+            
+            if type in temp_mix and temp_mix[type] > 0:
+                temp_mix[type] -= 1
+            else: return False
+        
+        return True
+    
+    def get_all_valid_combinations(self, mix: dict) -> list[Combination]:
+        """Find all the different combinations of stations for the given mix"""
+        # Order the possible stations on the board by station type
+        stations_in_mix = {station_type: [] for station_type in mix}
+        for node in self.G.nodes:
+            node_type = self.G.nodes[node]['type']
+            if node_type in mix:
+                stations_in_mix[node_type].append(self.G.nodes[node]['pos'])
+        
+        # Initialising lists for combinations
+        station_samples = []
+        station_permutations = []
+        final_combinations = []
+        
+        # Insert the amount of samples we need for each type as the station positions for that type
+        # Example: b=1, g=2 -> [(xb_1, yb_1,), ...], [(xg_1, yg_1,), ...], [(xg_1, yg_1,), ...]
+        for station_type in mix:
+                for _ in range(mix[station_type]):
+                    station_samples.append(stations_in_mix[station_type])
+        
+        # Obtain the distinct permutations of the sample positions from before
+        # Example: b=1, g=2 -> [b, g, g], [g, b, g], [g, g, b]
+        list_iter = distinct_permutations(station_samples)
+        for item in list_iter:
+            station_permutations.append(item)
+        
+        # Obtain all the combinations from the possible stations for each station type and for each permutation
+        # Example (one permutation): b = 1, g = 2 and b=[(1, 2), (4, 3)], g=[(3, 2), (4, 6), (6, 5)] ->
+        # [(1, 2), (3, 2), (4, 6)], [(1, 2), (3, 2), (6, 5)], [(1, 2), (4, 6), (6, 5)], [(4, 3), (3, 2), (4, 6)], [(4, 3), (3, 2), (6, 5)], [(4, 3), (4, 6), (6, 5)]
+        for station_permutation in station_permutations:
+            list_iter = [p for p in product(*station_permutation)]
+            for item in list_iter:
+                # Convert the item to the correct datatype
+                item = list(item)
+
+                # Only keep the valid combinations (i.e. those that don't go backwards) and assign the cost
+                if not self.is_valid(Combination(item), mix): continue
+
+                final_combinations.append(Combination(item, self.get_cost(Combination(item))))
+
+        # Return the list containing all the combinations
+        return final_combinations
+        
+    def update_weights(self, path: Path, mix_combinations: dict, reset_weights: bool = False):
+        """Update the graph and combination weights based on a path. The added (or subtracted if 
+        reset_weights is true) weights correspond to the weight of the given node type in that position"""
+        # Determine the sign corresponding to whether we are about to start the path (reset_weights = false)
+        # or have just ended the path (reset_weights)
+        sign = 1 if not reset_weights else -1
+        
+        # Go through the nodes and the corresponding edges in the path and the different combinations
+        for node in path.nodes:
+            # Update the node weight (if sign is 1 we add the weight and if sign is -1 we subtract the weight)
+            weight = self.weights[node['type']]
+            self.G.nodes[node['name']]['weight'] += sign*weight
+            
+            # Update the edges going into this node to this weight
+            in_edges = self.G.in_edges(node['name'])
+            for edge in in_edges:
+                self.G.edges[edge]['weight'] += sign*weight
+
+            # If the node is not a station, just continue to next node
+            if node['type'] in ('null', 'start', 'end'): continue
+            
+            # Update the weights of the combinations that include atleast one node from the path
+            for mix in mix_combinations:
+                for combination in mix_combinations[mix]:
+                    if node['pos'] in combination.nodes:
+                        weight *= combination.nodes.count(node['pos'])
+                        combination.cost += sign*weight
+        
+    def reduce(self, combination: Combination):
+        """Return the reduced graph including free nodes and the nodes contained in the combination"""
+        reduced_graph = deepcopy(self)
+        
+        remove_nodes = []
+        for node in self.G:
+            # Getting the position and type of the node
+            pos = self.G.nodes[node]['pos']
+            type = self.G.nodes[node]['type']
+            
+            # If the node is start, end, or free station or it is included in the combination, it should be part of the graph
+            if (type in ('null', 'start', 'end') or pos in combination.nodes): continue
+            
+            remove_nodes.append(node)
+
+        reduced_graph.G.remove_nodes_from(remove_nodes)
+        
+        return reduced_graph
+    
+    def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
         """TODO: Find all paths for a given mix"""
 
         raise NotImplementedError("This function is not implemented yet.")
         
-
-    def find_shortest_paths_for_mix(self, mix: dict, cutoff: int = None) -> List[Path]:
+    def find_shortest_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
         """TODO: Find the shortest paths for a given mix"""
         
         raise NotImplementedError("This function is not implemented yet.")
-    
-    def plot_graph(self, color_map: dict):
+
+
+    def plot(self, color_map: dict):
         """Plot the graph with the node positions as given in the layout"""
 
         pos = nx.get_node_attributes(self.G,'pos')
@@ -134,3 +288,28 @@ class LayoutGraph():
         # Draw the graph
         nx.draw_networkx(self.G, with_labels=True, font_color='white', node_size=1000, node_color=colors, font_size=8, pos=pos)
         plt.show()
+    
+
+    
+        
+            
+        
+    # def find_best_combinations_for_mix(self, mix: dict, n: int) -> List[List[str]]:
+    #     """Find the n best combinations for the mix in order from best to worst"""
+    #     combination_list = []
+    #     stations_in_mix = {}
+    #     stations_in_mix['type'] = {station_type: [] for station_type in mix}
+    #     stations_in_mix['row'] = {i: [] for i in range(self.layout['length_x'])}
+        
+    #     # Append the positions of the stations from the graph
+    #     for node in self.G.nodes:
+    #         node_type = self.G.nodes[node]['type']
+    #         if node_type in mix:
+    #             stations_in_mix['type'][node_type].append(self.G.nodes[node]['pos'])
+                
+    #             row = self.G.nodes[node]['pos'][1]
+    #             stations_in_mix['row'][row].append((node_type, self.G.nodes[node]['pos']))
+        
+    #     # NOT DONE
+        
+    #     return combination_list
