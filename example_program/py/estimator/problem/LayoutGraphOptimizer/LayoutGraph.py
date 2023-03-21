@@ -109,7 +109,7 @@ class LayoutGraph():
         
         for x in range(0, layout['length_x']):
             if x > 0: self.G.add_edge(f"{x}_start", f"{x-1}_start", weight=0) # Left
-            if x < layout['length_x'] - 1: self.G.add_edge(f"{x}_start", f"{x+1}_start", weight=0) # Right
+            #if x < layout['length_x'] - 1: self.G.add_edge(f"{x}_start", f"{x+1}_start", weight=0) # Right
             self.G.add_edge(f"{x}_start", f"{x}_0", weight=weights[layout['nodes'][x]]) # Up
         
         # Add start and end node
