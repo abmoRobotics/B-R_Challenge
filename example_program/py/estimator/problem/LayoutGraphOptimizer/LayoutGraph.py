@@ -266,13 +266,6 @@ class LayoutGraph():
         reduced_graph.G.remove_nodes_from(remove_nodes)
         
         return reduced_graph
-    
-    def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
-        """TODO: Find all paths for a given mix"""
-
-        raise NotImplementedError("This function is not implemented yet.")
-        
-    def find_shortest_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
         """TODO: Find the shortest paths for a given mix"""
         
         raise NotImplementedError("This function is not implemented yet.")
