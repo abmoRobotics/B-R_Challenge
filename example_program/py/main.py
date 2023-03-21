@@ -4,7 +4,7 @@ from commands_enum import Commands
 from threading import Timer
 from threading import Thread
 from time import sleep
-from model import Model, get_movement_instructions_from_path
+from model import Model, get_movement_instructions_from_path, flatten
 from estimator.problem.find_paths import global_graph, reduced_combinations
 
 # static data for connecting
@@ -15,10 +15,11 @@ topic_status = "aws_br/status"
 client_id = f'python-mqtt-student-machine'
 
 #Global variables
-sleeper = 3 #sec
+sleeper = 2 #sec
 
+# Save the current paths of the shuttles
+current_paths = {str(shuttleId): [] for shuttleId in range(15)}
 
-  
 # Opening JSON files
 f = open('example_program/py/data/board.feed.data.json')
 board = json.load(f)
@@ -41,7 +42,6 @@ def threadedMoveShuttleToStart(client: mqtt_client, id, startLane):
     data = {"method": "MOVE_SHUTTLE_TO_START", "id": id, "stationId": startLane}
     dump = json.dumps(data)
     client.publish(topic_cmd, dump)
-     
 
 def init_cmd(client: mqtt_client, topic):
     initConfig = {"method": "SET_CONF", "type": "POST", "data": board }
@@ -60,7 +60,6 @@ def deferred_send_data (client: mqtt_client, telegram):
     print(telegram)
     dump = json.dumps(telegram)
     client.publish(topic_cmd, dump)
-
 
 def connect ():
 
@@ -85,17 +84,22 @@ def switch_status (client: mqtt_client, telegram):
     elif telegram['method'] == "CONF":
             # //First get initial mixes and set all shuttles to these
             mixes = model.get_initial_mixes(board['columns'])
-            for mix in mixes:
+            shortestPaths = []
+            for col, mix in enumerate(mixes):
                 mix_telegram = { "method": "SET_SHUTTLE_MIX", "id": mix['shuttleId'], "mixId": mix['mixId'] }
                 send_data(client, mix_telegram)
 
+                # Find the shortest path going through these stations (and no others)
+                pathSegments = model.find_optimal_path_from_stations(mix['stationsToVisit'], start_node=f"{col}_start")
+                shortestPaths.append(flatten(pathSegments))
+                current_paths[mix['shuttleId']] = pathSegments
+                
+                # Update the global graph in the model for the first path segment
+                model.graph.update_weights(pathSegments[0], model.combinations)
+            
             sleep(sleeper)
-    # elif telegram['method'] == 'MIX_SET':
-    #         # //Then send first move for all shuttles
-            # firstMove = model.get_initial_moves(telegram['data']['shuttleId'])
-            # move_telegram = { "method": "MOVE_SHUTTLE_TO", "id": telegram['data']['shuttleId'], "direction": firstMove }
-            # send_data(client, move_telegram)
-            moves = model.get_initial_moves(board['columns'])
+            
+            moves = model.get_initial_moves(board['columns'], shortestPaths)
             for firstMove in moves:
                 move_telegram = { "method": "MOVE_SHUTTLE_TO", "id": firstMove['shuttleId'], "direction": firstMove['move'] }
                 send_data(client, move_telegram)
@@ -106,8 +110,15 @@ def switch_status (client: mqtt_client, telegram):
             if (dir is not None):
                 move_telegram = { "method": "MOVE_SHUTTLE_TO", "id": telegram['data']['shuttleId'], "direction": dir }
                 send_data(client, move_telegram)
-            
+        
     elif telegram['method'] == "PROCESSING_DONE":
+        # Get the previous and current segments from the path and remove it from the list
+        previous_pathSegment = current_paths[telegram['data']['shuttleId']].pop(0)
+        next_pathSegment = current_paths[telegram['data']['shuttleId']][0]
+        
+        # Reset the weights from the previous path segment and update the weights for the next path segment
+        model.graph.update_weights(previous_pathSegment, model.combinations, reset_weights=True)
+        model.graph.update_weights(next_pathSegment, model.combinations)
         
         dir = model.get_next_move(telegram['data']['shuttleId'])
         if (dir is not None):
@@ -137,7 +148,7 @@ def switch_status (client: mqtt_client, telegram):
                     thread.start()
             
             if telegram['error']['errorId'] == 10006:
-                # If the shuttle is trying to move outside of the scope of the board, do somethingm else
+                # If the shuttle is trying to move outside of the scope of the board, do something else
                     dir = model.get_current_move(telegram['error']['shuttleId'])
                     if dir == 'l': 
                         dir = 'r'
@@ -164,10 +175,10 @@ def switch_status (client: mqtt_client, telegram):
         if (model.is_move_reset(telegram['data']['shuttleId'])):
             # Here we start the returning of shuttles
             # First off, check if we are finished: i.e. all mixes have shuttles asigned to them
-            weAreFinshed = areWeFinished()
-            print('are we finished?', weAreFinshed)
+            weAreFinished = areWeFinished()
+            print('are we finished?', weAreFinished)
 
-            if (not weAreFinshed):
+            if (not weAreFinished):
                 mix = model.get_next_mix(telegram['data']['shuttleId'])
                 # build telegram and send
                 mix_telegram = { "method": "SET_SHUTTLE_MIX", "id": telegram['data']['shuttleId'], "mixId": mix }
@@ -179,7 +190,9 @@ def switch_status (client: mqtt_client, telegram):
                     stationsToVisit = model.get_stations_to_visit(mix)
                     
                     # Find the shortest path going through these stations (and no others)
-                    shortestPath = model.find_optimal_path_from_stations(stationsToVisit)
+                    pathSegments = model.find_optimal_path_from_stations(stationsToVisit)
+                    shortestPath = flatten(pathSegments)
+                    current_paths[telegram['data']['shuttleId']] = pathSegments
                     
                     # Convert the path to movements
                     movements, startPos = get_movement_instructions_from_path(shortestPath)
@@ -188,10 +201,10 @@ def switch_status (client: mqtt_client, telegram):
                     # Set the next movement for the given shuttle
                     model.set_next_movement(telegram['data']['shuttleId'], mix, movements)
                     
-                    # Update the global graph in the model based on the chosen path
-                    model.graph.update_weights(shortestPath, model.combinations)
+                    # Update the global graph in the model for the first path segment
+                    model.graph.update_weights(pathSegments[0], model.combinations)
 
-            if weAreFinshed:
+            if weAreFinished:
                 # If we are finished, we only want to move the shuttle to a start station and do nothing else
                 once = model.getOnce()
                 startStation = 'Start_0' + str(once)
@@ -224,6 +237,7 @@ def areWeFinished():
         totalQuantity += order['quantity']
         totalStarted += order['started']
     print('Evaluating quantities', totalQuantity, 'and finished', totalStarted)
+    
     return totalQuantity == totalStarted
 
 def subscribe(client: mqtt_client, topic):
