@@ -167,7 +167,7 @@ class Model:
             
         return stations_to_visit
     
-    def find_optimal_path_from_stations (self, stations_to_visit, start_node = "start") -> list[Path]:
+    def find_optimal_path_from_stations (self, stations_to_visit, start_node = 'start') -> list[Path]:
         """Find the segmented optimal path from a list of stations to the next station
         
         Arguments:
@@ -191,12 +191,24 @@ class Model:
             next_station = stations_to_visit[i+1]
             
             # Find the shortest path to the next station
-            nodes_shortest_path = nx.shortest_path(reduced_graph.G, current_station, next_station, weight='weight')    
+            if current_station != next_station:
+                nodes_shortest_path = nx.shortest_path(reduced_graph.G, current_station, next_station, weight='weight')
+                
+                # Remove the nodes from the handover position to the chosen start lane
+                if i == 0: 
+                    startIdx = next(idx-1 for idx, node in enumerate(nodes_shortest_path) if node[-1] == '0')
+                    nodes_shortest_path = nodes_shortest_path[startIdx:]
             
-            # Remove the nodes from the handover position to the chosen start lane
-            if i == 0: 
-                startIdx = next(idx-1 for idx, node in enumerate(nodes_shortest_path) if node[-1] == '0')
-                nodes_shortest_path = nodes_shortest_path[startIdx:]
+            # If the current and next station are identical go the side (with least cost) and back again
+            else:
+                tempCost = sys.maxsize
+                for out_edge in reduced_graph.G.out_edges(current_station):
+                    # If it is in the same row and so far has the lower cost, then save it
+                    if out_edge[1][-1] == current_station[-1] and reduced_graph.G.nodes[out_edge[1]]['weight'] < tempCost:
+                        tempCost = reduced_graph.G.nodes[out_edge[1]]['weight']
+                        adjacent_node = out_edge[1]
+                
+                nodes_shortest_path = [current_station] + [adjacent_node] + [next_station]
             
             # Append the local path to the full path
             path_nodes += nodes_shortest_path[:-1] # Remove the last node since it is the next station
