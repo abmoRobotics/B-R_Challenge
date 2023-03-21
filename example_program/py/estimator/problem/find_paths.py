@@ -1,6 +1,6 @@
 from copy import deepcopy
-from .LayoutGraphOptimizer.LayoutGraph import LayoutGraph
-from .LayoutGraphOptimizer.utils import *
+from .LayoutGraphOptimizer.LayoutGraph import *
+from .LayoutGraphOptimizer.utils import get_sorted_best_combinations
 import json
 
 
