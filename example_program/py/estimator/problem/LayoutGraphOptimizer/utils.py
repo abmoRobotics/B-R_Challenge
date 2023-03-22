@@ -98,3 +98,6 @@ def get_sorted_best_combinations(combination_list: list[Combination], n) -> list
 
 def get_best_combination(combinations: list[Combination]) -> Combination:
     return min(combinations, key=lambda x : x.cost)
+
+def get_worst_combination(combinations: list[Combination]) -> Combination:
+    return max(combinations, key=lambda x : x.cost)
