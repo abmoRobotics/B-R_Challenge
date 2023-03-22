@@ -254,7 +254,7 @@ class LayoutGraph():
         # Example (one permutation): b = 1, g = 2 and b=[(1, 2), (4, 3)], g=[(3, 2), (4, 6), (6, 5)] ->
         # [(1, 2), (3, 2), (4, 6)], [(1, 2), (3, 2), (6, 5)], [(1, 2), (4, 6), (6, 5)], [(4, 3), (3, 2), (4, 6)], [(4, 3), (3, 2), (6, 5)], [(4, 3), (4, 6), (6, 5)]
         for station_permutation in station_permutations:
-            list_iter = [p for p in product(*station_permutation)]
+            list_iter = [p for p in self.cartesian_product(k, *station_permutation)]
             for item in list_iter:
                 # Convert the item to the correct datatype
                 item = list(item)
