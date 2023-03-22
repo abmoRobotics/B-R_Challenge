@@ -5,7 +5,7 @@ from LayoutGraphOptimizer.utils import *
 # print(LAYOUT)
 
 
-def test_combinatorial_time():
+def test_combinatorial_time(k_range = 4):
     LAYOUT = {
     'nodes': [
         'b', 'null','y','null','y','null','g',
@@ -48,9 +48,6 @@ def test_combinatorial_time():
 
     ### DEFINE GRAPH ###
     graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
-
-    ###  PARAMETERS  ###
-    k_range = 4 # range of k values to test from 1 to k_range
 
     ### METRICS ###
     combinations =           [{} for i in range(k_range)]
