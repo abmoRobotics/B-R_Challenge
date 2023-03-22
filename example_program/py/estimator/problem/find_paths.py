@@ -69,7 +69,7 @@ graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
 combinations = {}
 for mix_type in VARIANT_MIXES:
     # Obtaining all the valid combinations and corresponding cost
-    combinations[mix_type] = graphGlobal.get_all_valid_combinations(VARIANT_MIXES[mix_type])
+    combinations[mix_type] = graphGlobal.get_all_valid_combinations(VARIANT_MIXES[mix_type],k=3)
     
     # Keep only the 50 best combinations in order from best to worst
     combinations[mix_type] = get_sorted_best_combinations(combinations[mix_type], 50)
