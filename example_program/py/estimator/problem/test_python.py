@@ -20,23 +20,7 @@ def test_combinatorial_time():
     }
 
     # Define weights (i.e. processing time) for each node type (including null)
-    WEIGHTS = {
-        'b': 3,
-        'y': 3,
-        'g': 5,
-        'null': 1,
-    }
-
-    # Set colors for nodes, which is needed for plotting the graph. Note that each you need to define the color for each 
-    #   node type (including null) as well as the 'start' and 'end' node types.
-    COLOR_MAP = {
-        'start': 'black',
-        'b': 'blue',
-        'y': 'darkgoldenrod',
-        'g': 'green',
-        'end': 'black',
-        'null': 'grey'
-    }
+    WEIGHTS = {'b': 3, 'y': 3, 'g': 5, 'null': 1}
 
     # Variant Mix A: How many of each type of node should be traversed?
     VARIANT_MIXES = {
@@ -62,78 +46,49 @@ def test_combinatorial_time():
         }
     }
 
-
+    ### DEFINE GRAPH ###
     graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
 
-    # Calculate the best combinations of stations for the different mixes
-    combinations = {}
-    combinations_new_k4 = {}
-    combinations_new_k3 = {}
-    combinations_new_k2 = {}
-    combinations_new_k1 = {} 
+    ###  PARAMETERS  ###
+    k_range = 4 # range of k values to test from 1 to k_range
 
-    start_time_combinations_old = time.perf_counter()
-    for mix_type in VARIANT_MIXES:
-        # Obtaining all the valid combinations and corresponding cost
-        combinations[mix_type] = graphGlobal.get_all_valid_combinations(VARIANT_MIXES[mix_type])
-    total_time_combinations_old = time.perf_counter() - start_time_combinations_old
+    ### METRICS ###
+    combinations =           [{} for i in range(k_range)]
+    best_combinations =      [[] for i in range(k_range)]
+    worst_combinations =     [[] for i in range(k_range)]
+    timers =                 [0  for i in range(k_range)]
 
-    start_time_combinations_new_k4 = time.perf_counter()
-    for mix_type in VARIANT_MIXES:
-        combinations_new_k4[mix_type] = graphGlobal.get_all_valid_combinations_new(VARIANT_MIXES[mix_type], k=4)
-    total_time_combinations_new_k4 = time.perf_counter() - start_time_combinations_new_k4
+    ### GET ALL COMBINATIONS ###
+    for k in range(1, k_range+1):
+        start_time_combinations = time.perf_counter()
+        for mix_type in VARIANT_MIXES:
+            combinations[k-1][mix_type] = graphGlobal.get_all_valid_combinations(VARIANT_MIXES[mix_type], k=k)
+        timers[k-1] = time.perf_counter() - start_time_combinations
+    
+    ### GET BEST AND WORST COMBINATIONS ###
+    for k in range(0, k_range):
+        for mix_type in VARIANT_MIXES:
+            best_combinations[k].append(get_best_combination(combinations[k][mix_type]))
+            worst_combinations[k].append(get_worst_combination(combinations[k][mix_type]))
 
-    start_time_combinations_new_k3 = time.perf_counter()
-    for mix_type in VARIANT_MIXES:
-        combinations_new_k3[mix_type] = graphGlobal.get_all_valid_combinations_new(VARIANT_MIXES[mix_type], k=3)
-    total_time_combinations_new_k3 = time.perf_counter() - start_time_combinations_new_k3
-
-    start_time_combinations_new_k2 = time.perf_counter()
-    for mix_type in VARIANT_MIXES:
-        combinations_new_k2[mix_type] = graphGlobal.get_all_valid_combinations_new(VARIANT_MIXES[mix_type], k=2)
-    total_time_combinations_new_k2 = time.perf_counter() - start_time_combinations_new_k2
-
-    start_time_combinations_new_k1 = time.perf_counter()
-    for mix_type in VARIANT_MIXES:
-        combinations_new_k1[mix_type] = graphGlobal.get_all_valid_combinations_new(VARIANT_MIXES[mix_type], k=1)
-    total_time_combinations_new_k1 = time.perf_counter() - start_time_combinations_new_k1
-
-    best_combination = get_best_combination(combinations['mix_a'])
-    worst_combination = get_worst_combination(combinations['mix_a'])
-
-    best_combination_new_k4 = get_best_combination(combinations_new_k4['mix_a'])
-    worst_combination_new_k4 = get_worst_combination(combinations_new_k4['mix_a'])
-
-    best_combination_new_k3 = get_best_combination(combinations_new_k3['mix_a'])
-    worst_combination_new_k3 = get_worst_combination(combinations_new_k3['mix_a'])
-
-    best_combination_new_k2 = get_best_combination(combinations_new_k2['mix_a'])
-    worst_combination_new_k2 = get_worst_combination(combinations_new_k2['mix_a'])
-
-    best_combination_new_k1 = get_best_combination(combinations_new_k1['mix_a'])
-    worst_combination_new_k1 = get_worst_combination(combinations_new_k1['mix_a'])
-
+    ### PRINT RESULTS ###
     print(f"<--------------------------------------------------------------------------------->")
     print('INFO FOR MIX A')
     print(f'Number of stations in mix A:        {VARIANT_MIXES["mix_a"]["g"] + VARIANT_MIXES["mix_a"]["y"] + VARIANT_MIXES["mix_a"]["b"]}')
     print("<---------------------------------------------------------------------------------->")
-    print(f'{"Best combination cost":37} {best_combination.cost:<7} {"number of combinations"} {len(combinations["mix_a"]):>7}')
-    print(f'{"best_combination_new k=4 cost":37} {best_combination_new_k4.cost:<7} {"number of combinations"} {len(combinations_new_k4["mix_a"]):>7}')
-    print(f'{"best_combination_new k=3 cost":37} {best_combination_new_k3.cost:<7} {"number of combinations"} {len(combinations_new_k3["mix_a"]):>7}')
-    print(f'{"best_combination_new k=2 cost":37} {best_combination_new_k2.cost:<7} {"number of combinations"} {len(combinations_new_k2["mix_a"]):>7}')
-    print(f'{"best_combination_new k=1 cost":37} {best_combination_new_k1.cost:<7} {"number of combinations"} {len(combinations_new_k1["mix_a"]):>7}')
+    for k in range(k_range-1, -1,-1):
+        print(f'{"best_combination k=" + str(k+1) + " cost":37} {best_combinations[k][0].cost:<7} {"number of combinations"} {len(combinations[k]["mix_a"]):>7}')
     print("<---------------------------------------------------------------------------------->")
-    print(f'{"best_combination_old nodes":37} {best_combination.nodes}') 
-    print(f'{"best_combination_new k=4 nodes":37} {best_combination_new_k4.nodes}')
-    print(f'{"best_combination_new k=3 nodes":37} {best_combination_new_k3.nodes}')
-    print(f'{"best_combination_new k=2 nodes":37} {best_combination_new_k2.nodes}')
-    print(f'{"best_combination_new k=1 nodes":37} {best_combination_new_k1.nodes}')
+    for k in range(k_range-1, -1,-1):
+        print(f'{"Best combination k=" + str(k+1) + " nodes":37} {best_combinations[k][0].nodes}')
     print("<---------------------------------------------------------------------------------->")
-    print(f'{"Execution time combinations_old":37} {total_time_combinations_old:.2f}s')
-    print(f'{"Execution time combinations_new k=4":37} {total_time_combinations_new_k4:.2f}s')
-    print(f'{"Execution time combinations_new k=3":37} {total_time_combinations_new_k3:.2f}s')
-    print(f'{"Execution time combinations_new k=2":37} {total_time_combinations_new_k2:.2f}s')
-    print(f'{"Execution time combinations_new k=1":37} {total_time_combinations_new_k1:.2f}s')
+    for k in range(k_range-1, -1,-1):
+        print(f'{"Worst combination k=" + str(k+1) + " nodes":37} {worst_combinations[k][0].nodes}')
+    print("<---------------------------------------------------------------------------------->")
+    for k in range(k_range-1, -1,-1):
+        print(f'{"Execution time combinations k=" + str(k+1):37} {timers[k]:.2f}s')
+    
+
 
 
 if __name__ == "__main__":
