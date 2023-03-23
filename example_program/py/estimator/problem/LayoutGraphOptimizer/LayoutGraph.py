@@ -231,8 +231,13 @@ class LayoutGraph():
             return results   
 
     
-    def get_all_valid_combinations(self, mix: dict, k: int) -> list[Combination]:
-        """Find all the different combinations of stations for the given mix"""
+    def find_combinations(self, mix: dict, method: str = "brute", k: int = -1) -> list[Combination]:
+        """Find the different combinations of stations for the given mix.\n
+        Possible methods:
+            - "brute": Using brute force to find all combinations
+            - "knn": Using KNN and a heuristic to find the best combinations (amount depends on "k"). 
+                - "k": Number of neighbours for the KNN search
+        """
         # Order the possible stations on the board by station type
         stations_in_mix = {station_type: [] for station_type in mix}
         for node in self.G.nodes:
@@ -261,13 +266,19 @@ class LayoutGraph():
         # Example (one permutation): b = 1, g = 2 and b=[(1, 2), (4, 3)], g=[(3, 2), (4, 6), (6, 5)] ->
         # [(1, 2), (3, 2), (4, 6)], [(1, 2), (3, 2), (6, 5)], [(1, 2), (4, 6), (6, 5)], [(4, 3), (3, 2), (4, 6)], [(4, 3), (3, 2), (6, 5)], [(4, 3), (4, 6), (6, 5)]
         for station_permutation in station_permutations:
-            list_iter = [p for p in self.cartesian_product(k, *station_permutation)]
+            if method == "brute":
+                list_iter = [p for p in product(*station_permutation)]
+            elif method == "knn":
+                list_iter = [p for p in self.cartesian_product(k, *station_permutation)]
+            else:
+                raise Exception("Method for get_all_combinations is not valid")
+            
             for item in list_iter:
                 # Convert the item to the correct datatype
                 item = list(item)
 
                 # Only keep the valid combinations (i.e. those that don't go backwards) and assign the cost
-                if not self.is_valid(Combination(item), mix): continue # TODO: Can be removed because we already check this in the heuristic
+                #if not self.is_valid(Combination(item), mix): continue # TODO: Can be removed because we already check this in the heuristic
 
                 final_combinations.append(Combination(item, self.get_cost(Combination(item))))
 
