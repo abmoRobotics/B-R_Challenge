@@ -4,6 +4,8 @@ import matplotlib.pyplot as plt
 from itertools import product
 from more_itertools import distinct_permutations
 from copy import deepcopy
+import heapq
+import math
 
 class Combination():
     """Defines a simple datastructure that represents a combination"""
@@ -109,7 +111,7 @@ class LayoutGraph():
         
         for x in range(0, layout['length_x']):
             if x > 0: self.G.add_edge(f"{x}_start", f"{x-1}_start", weight=0) # Left
-            if x < layout['length_x'] - 1: self.G.add_edge(f"{x}_start", f"{x+1}_start", weight=0) # Right
+            #if x < layout['length_x'] - 1: self.G.add_edge(f"{x}_start", f"{x+1}_start", weight=0) # Right
             self.G.add_edge(f"{x}_start", f"{x}_0", weight=weights[layout['nodes'][x]]) # Up
         
         # Add start and end node
@@ -133,7 +135,7 @@ class LayoutGraph():
         """Get the size of the graph in bytes"""
         return sys.getsizeof(self)
     
-    def get_cost(self, combination: Combination, startColumn = -1) -> int:
+    def get_cost(self, combination: Combination, startColumn = -1, only_length = False) -> int:
         """Return the cost of a given combination based on Manhattan distance between stations"""
         cost = 0
         
@@ -143,8 +145,10 @@ class LayoutGraph():
         for node in combination.nodes:
             # Adds the cost of moving to the node
             cost += self.manhattan_distance(prevNode, node) if prevNode != node else 2
+            
             # Adds the cost of processing at the node
-            cost += self.G.nodes[f"{node[0]}_{node[1]}"]['weight']
+            if not only_length: cost += self.G.nodes[f"{node[0]}_{node[1]}"]['weight']
+            
             # We traverse the nodes 
             prevNode = node
         
@@ -175,7 +179,59 @@ class LayoutGraph():
         
         return True
     
-    def get_all_valid_combinations(self, mix: dict) -> list[Combination]:
+        # This function is used as an heuristic for knn to find the nearest(cheapest) neighbors.
+    def heuristic_for_knn(self, point1, point2):
+        """ Right now the heuristic is just the Euclidean distance between two points."""
+        heuristic = math.sqrt(sum((p1 - p2) ** 2 for p1, p2 in zip(point1, point2)))
+        # Here we penalize the shuttle for moving to the same station.
+        if heuristic == 0: heuristic = 2 
+        # Here we disallow the shuttle to move backwards, because it is not allowed to do so.
+        if point1[1] > point2[1]: heuristic = sys.maxsize
+
+        return heuristic
+    
+    def knn(self, point, points, k):
+        """ Returns the k nearest neighbors of a point.
+        
+        Args:
+            point: The point for which we want to find the k nearest neighbors.
+            points: The list of points from which we want to find the k nearest neighbors.
+            k: The number of nearest neighbors to find.
+            
+        Returns:
+            The k nearest neighbors of the point.
+        """
+        # Euclidean distance is our heuristic for finding the nearest neighbors or the "best/cheapest" next step, so we use a min-heap.
+        distances = [(self.heuristic_for_knn(point, other_point), other_point) for other_point in points] 
+        heapq.heapify(distances)    # This is a min-heap, so the smallest distance will be at the top.
+        return [heapq.heappop(distances)[1] for _ in range(min(k, len(distances)))] # Return the k nearest neighbors
+
+    def cartesian_product(self, k=None, *iterables):
+        """ Returns the Cartesian product of the iterables.
+        
+        Args:
+            k: The number of nearest neighbors to find for each point. k scales the number of combinations by k^N, where N is the number of iterables.
+            *iterables: The iterables to take the Cartesian product of.
+            
+        Returns:
+            The Cartesian product of the iterables.
+        """
+        if not iterables:
+            return [[]] # If there are no iterables, return an empty list.
+        else:
+            results = [] # The list of combinations.
+            for item in iterables[0]: # For each item in the first iterable.
+                if len(iterables) > 1: 
+                    neighbors = self.knn(item, iterables[1], k) if k is not None else iterables[1]
+                    for sub_product in self.cartesian_product(k, *([neighbors] + list(iterables[2:]))): 
+                        results.append([item] + sub_product)
+
+                else:
+                    results.append([item]) 
+            return results   
+
+    
+    def get_all_valid_combinations(self, mix: dict, k: int) -> list[Combination]:
         """Find all the different combinations of stations for the given mix"""
         # Order the possible stations on the board by station type
         stations_in_mix = {station_type: [] for station_type in mix}
@@ -205,13 +261,13 @@ class LayoutGraph():
         # Example (one permutation): b = 1, g = 2 and b=[(1, 2), (4, 3)], g=[(3, 2), (4, 6), (6, 5)] ->
         # [(1, 2), (3, 2), (4, 6)], [(1, 2), (3, 2), (6, 5)], [(1, 2), (4, 6), (6, 5)], [(4, 3), (3, 2), (4, 6)], [(4, 3), (3, 2), (6, 5)], [(4, 3), (4, 6), (6, 5)]
         for station_permutation in station_permutations:
-            list_iter = [p for p in product(*station_permutation)]
+            list_iter = [p for p in self.cartesian_product(k, *station_permutation)]
             for item in list_iter:
                 # Convert the item to the correct datatype
                 item = list(item)
 
                 # Only keep the valid combinations (i.e. those that don't go backwards) and assign the cost
-                if not self.is_valid(Combination(item), mix): continue
+                if not self.is_valid(Combination(item), mix): continue # TODO: Can be removed because we already check this in the heuristic
 
                 final_combinations.append(Combination(item, self.get_cost(Combination(item))))
 
@@ -227,6 +283,8 @@ class LayoutGraph():
         
         # Go through the nodes and the corresponding edges in the path and the different combinations
         for node in path.nodes:
+            if self.G.nodes[node['name']]['type'] not in self.weights: continue
+            
             # Update the node weight (if sign is 1 we add the weight and if sign is -1 we subtract the weight)
             weight = self.weights[node['type']]
             self.G.nodes[node['name']]['weight'] += sign*weight
@@ -243,38 +301,28 @@ class LayoutGraph():
             for mix in mix_combinations:
                 for combination in mix_combinations[mix]:
                     if node['pos'] in combination.nodes:
-                        weight *= combination.nodes.count(node['pos'])
-                        combination.cost += sign*weight
+                        combination.cost += sign*weight*combination.nodes.count(node['pos'])
         
-    def reduce(self, combination: Combination):
-        """Return the reduced graph including free nodes and the nodes contained in the combination"""
+    def reduce(self, stations_to_visit: list[str]):
+        """Return the reduced graph including free nodes and the nodes contained in the stations to visit"""
         reduced_graph = deepcopy(self)
         
         remove_nodes = []
         for node in self.G:
             # Getting the position and type of the node
-            pos = self.G.nodes[node]['pos']
             type = self.G.nodes[node]['type']
             
             # If the node is start, end, or free station or it is included in the combination, it should be part of the graph
-            if (type in ('null', 'start', 'end') or pos in combination.nodes): continue
+            if (type in ('null', 'start', 'end') or node in stations_to_visit): continue
             
             remove_nodes.append(node)
 
         reduced_graph.G.remove_nodes_from(remove_nodes)
         
         return reduced_graph
-    
-    def find_all_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
-        """TODO: Find all paths for a given mix"""
-
-        raise NotImplementedError("This function is not implemented yet.")
-        
-    def find_shortest_paths_for_mix(self, mix: dict, cutoff: int = None) -> list[Path]:
         """TODO: Find the shortest paths for a given mix"""
         
         raise NotImplementedError("This function is not implemented yet.")
-
 
     def plot(self, color_map: dict):
         """Plot the graph with the node positions as given in the layout"""
@@ -289,27 +337,3 @@ class LayoutGraph():
         nx.draw_networkx(self.G, with_labels=True, font_color='white', node_size=1000, node_color=colors, font_size=8, pos=pos)
         plt.show()
     
-
-    
-        
-            
-        
-    # def find_best_combinations_for_mix(self, mix: dict, n: int) -> List[List[str]]:
-    #     """Find the n best combinations for the mix in order from best to worst"""
-    #     combination_list = []
-    #     stations_in_mix = {}
-    #     stations_in_mix['type'] = {station_type: [] for station_type in mix}
-    #     stations_in_mix['row'] = {i: [] for i in range(self.layout['length_x'])}
-        
-    #     # Append the positions of the stations from the graph
-    #     for node in self.G.nodes:
-    #         node_type = self.G.nodes[node]['type']
-    #         if node_type in mix:
-    #             stations_in_mix['type'][node_type].append(self.G.nodes[node]['pos'])
-                
-    #             row = self.G.nodes[node]['pos'][1]
-    #             stations_in_mix['row'][row].append((node_type, self.G.nodes[node]['pos']))
-        
-    #     # NOT DONE
-        
-    #     return combination_list
