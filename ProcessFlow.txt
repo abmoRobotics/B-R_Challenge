@@ -1,16 +1,16 @@
 Initialisation:
 Step 1: Generate global graph for the process layout, which includes all possible paths between workstations (SOLVED)
 Step 2: Generate all combinations for each mix, (SOLVED)
-		and reduce to only logical combinations. (TODO)
+		and reduce to only logical combinations. (SOLVED)
 
 
 Runtime:
 // Internal
-Step 3: Given a specific mix, we return the best combination at a given time. (ROB6)
+Step 3: Given a specific mix, we return the best combination at a given time. (SOLVED)
 Step 4: Use the combination and the current global graph, to generate a path (SOLVED)
-Step 5: Use the path to update the current weight in the global graph. (TODO)
+Step 5: Use the path to update the current weight in the global graph. (We can update the weights but don't know how/where)
 // External
-Step 6: USe the path to make the shuttle move (Anton)
+Step 6: Use the path to make the shuttle move (Anton)
 
 
 
