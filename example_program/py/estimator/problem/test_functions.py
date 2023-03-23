@@ -59,7 +59,7 @@ def test_combinatorial_time(k_range = 4):
     for k in range(1, k_range+1):
         start_time_combinations = time.perf_counter()
         for mix_type in VARIANT_MIXES:
-            combinations[k-1][mix_type] = graphGlobal.get_all_valid_combinations(VARIANT_MIXES[mix_type], k=k)
+            combinations[k-1][mix_type] = graphGlobal.find_combinations(VARIANT_MIXES[mix_type], method="knn", k=k)
         timers[k-1] = time.perf_counter() - start_time_combinations
     
     ### GET BEST AND WORST COMBINATIONS ###

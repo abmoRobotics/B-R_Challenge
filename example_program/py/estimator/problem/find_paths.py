@@ -1,6 +1,6 @@
 from copy import deepcopy
 from .LayoutGraphOptimizer.LayoutGraph import *
-from .LayoutGraphOptimizer.utils import get_sorted_best_combinations
+from .LayoutGraphOptimizer.utils import get_best_combinations
 import json
 
 
@@ -69,11 +69,10 @@ global_graph = LayoutGraph(LAYOUT, WEIGHTS)
 reduced_combinations = {}
 for mix_type in VARIANT_MIXES:
     # Obtaining all the valid combinations and corresponding cost
-
-    reduced_combinations[mix_type] = global_graph.get_all_valid_combinations(VARIANT_MIXES[mix_type], k=3)
+    reduced_combinations[mix_type] = global_graph.find_combinations(VARIANT_MIXES[mix_type], method="knn", k=3)
     
     # Keep only the 50 best combinations in order from best to worst
-    reduced_combinations[mix_type] = get_sorted_best_combinations(reduced_combinations[mix_type], 50)
+    reduced_combinations[mix_type] = get_best_combinations(reduced_combinations[mix_type], 50)
 
 # ### FOR TESTING ###
 # best_combination = get_best_combination(combinations['mix_a'])
