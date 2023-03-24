@@ -20,6 +20,10 @@ def calculate_costs(paths, prod_order, layout, station_placement_cost):
 
     raise NotImplementedError("This function is not implemented yet.")
 
+def manhattan_distance(pos1, pos2) -> int:
+    """Find the Manhattan distance between pos1 and pos2"""
+    return abs(pos2[0] - pos1[0]) + abs(pos2[1] - pos1[1])
+
 def get_movement_instructions_from_path(path: Path):
     """Get the movement instructions and start position for a given path"""
     # Movement instructions are like ["f", "l", "f", "r", "f"]
@@ -35,7 +39,7 @@ def get_movement_instructions_from_path(path: Path):
     # If the difference in position is (-1, 0), then the robot needs to move left
 
     # Check validity of path with start and end node
-    if path[0]['type'] != 'start' or path[-1]['type'] != 'end':
+    if (path[0]['type'] != 'start' and 'start' not in path[0]['name']) or path[-1]['type'] != 'end':
         raise ValueError('Path does not start with start node or end with end node')
         
 
@@ -64,26 +68,26 @@ def get_movement_instructions_from_path(path: Path):
         y_diff = next_node_position[1] - current_node_position[1]
 
         # If the first node is the start node, then the robot needs to move forward
-        if i == 0:
-            movement_instructions.append('f')
+        #if i == 0:
+        #    movement_instructions.append('f')
         # If the first node is not the start node, then the robot needs to move forward, left or right
-        else:
-            # If the difference in position is (0, 1), then the robot needs to move forward
-            if x_diff == 0 and y_diff == 1:
-                movement_instructions.append('f')
-            # If the difference in position is (0, -1), then the robot needs to move backward
-            elif x_diff == 0 and y_diff == -1:
-                movement_instructions.append('b')
-            # If the difference in position is (1, 0), then the robot needs to move right
-            elif x_diff == 1 and y_diff == 0:
-                movement_instructions.append('r')
-            # If the difference in position is (-1, 0), then the robot needs to move left
-            elif x_diff == -1 and y_diff == 0:
-                movement_instructions.append('l')
+        #else:
+        # If the difference in position is (0, 1), then the robot needs to move forward
+        if x_diff == 0 and y_diff == 1:
+            movement_instructions.append('f')
+        # If the difference in position is (0, -1), then the robot needs to move backward
+        elif x_diff == 0 and y_diff == -1:
+            movement_instructions.append('b')
+        # If the difference in position is (1, 0), then the robot needs to move right
+        elif x_diff == 1 and y_diff == 0:
+            movement_instructions.append('r')
+        # If the difference in position is (-1, 0), then the robot needs to move left
+        elif x_diff == -1 and y_diff == 0:
+            movement_instructions.append('l')
     
     # Calculate the start row as the direct position under the first node in the path (ignore the start node in the graph)
-    start_row = path[1]['pos'][0]
-
+    start_row = path[0]['pos'][0]
+    
     return movement_instructions, start_row
 
 def get_sorted_best_combinations(combination_list: list[Combination], n) -> list[Combination]:
@@ -101,3 +105,7 @@ def get_best_combination(combinations: list[Combination]) -> Combination:
 
 def get_worst_combination(combinations: list[Combination]) -> Combination:
     return max(combinations, key=lambda x : x.cost)
+
+def flatten(l: list[list]) -> list:
+    return [item for sublist in l for item in sublist]
+

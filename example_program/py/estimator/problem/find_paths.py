@@ -1,6 +1,6 @@
 from copy import deepcopy
-from LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path
-from LayoutGraphOptimizer.utils import *
+from .LayoutGraphOptimizer.LayoutGraph import *
+from .LayoutGraphOptimizer.utils import get_sorted_best_combinations
 import json
 
 
@@ -63,26 +63,27 @@ VARIANT_MIXES = {
 
 # Create a global graph from layout and weights
 print('Creating graph...')
-graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
+global_graph = LayoutGraph(LAYOUT, WEIGHTS)
 
 # Calculate the best combinations of stations for the different mixes
-combinations = {}
+reduced_combinations = {}
 for mix_type in VARIANT_MIXES:
     # Obtaining all the valid combinations and corresponding cost
-    combinations[mix_type] = graphGlobal.get_all_valid_combinations(VARIANT_MIXES[mix_type],k=3)
+
+    reduced_combinations[mix_type] = global_graph.get_all_valid_combinations(VARIANT_MIXES[mix_type], k=3)
     
     # Keep only the 50 best combinations in order from best to worst
-    combinations[mix_type] = get_sorted_best_combinations(combinations[mix_type], 50)
+    reduced_combinations[mix_type] = get_sorted_best_combinations(reduced_combinations[mix_type], 50)
 
-### FOR TESTING ###
-best_combination = get_best_combination(combinations['mix_a'])
+# ### FOR TESTING ###
+# best_combination = get_best_combination(combinations['mix_a'])
 
-path = []
-for pos in best_combination.nodes:
-    path.append(graphGlobal.G.nodes[f'{pos[0]}_{pos[1]}'])
+# path = []
+# for pos in best_combination.nodes:
+#     path.append(global_graph.G.nodes[f'{pos[0]}_{pos[1]}'])
 
-graphGlobal.update_weights(Path(path), combinations)
-### FOR TESTING ###
+# global_graph.update_weights(Path(path), combinations)
+# ### FOR TESTING ###
 
 
 # Call the algorithm to find the shortest or all paths for the variant mix
@@ -132,4 +133,4 @@ store_movements = {
 #    outfile.write(json_object)
 
 # Plot the graph (without paths)
-graphGlobal.plot(COLOR_MAP)
+global_graph.plot(COLOR_MAP)
