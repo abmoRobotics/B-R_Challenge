@@ -1,6 +1,6 @@
 from copy import deepcopy
-from .LayoutGraphOptimizer.LayoutGraph import *
-from .LayoutGraphOptimizer.utils import get_best_combinations
+from LayoutGraphOptimizer.LayoutGraph import *
+from LayoutGraphOptimizer.utils import *
 import json
 
 
@@ -75,13 +75,9 @@ for mix_type in VARIANT_MIXES:
     reduced_combinations[mix_type] = get_best_combinations(reduced_combinations[mix_type], 50)
 
 # ### FOR TESTING ###
-# best_combination = get_best_combination(combinations['mix_a'])
-
-# path = []
-# for pos in best_combination.nodes:
-#     path.append(global_graph.G.nodes[f'{pos[0]}_{pos[1]}'])
-
-# global_graph.update_weights(Path(path), combinations)
+randomLayout = random_layout(7, 6, VARIANT_MIXES)
+randomgraph = LayoutGraph(randomLayout, WEIGHTS)
+randomgraph.plot(COLOR_MAP)
 # ### FOR TESTING ###
 
 
@@ -132,4 +128,4 @@ store_movements = {
 #    outfile.write(json_object)
 
 # Plot the graph (without paths)
-global_graph.plot(COLOR_MAP)
+#global_graph.plot(COLOR_MAP)

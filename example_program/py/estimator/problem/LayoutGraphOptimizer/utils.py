@@ -5,10 +5,35 @@ import random
 from .LayoutGraph import LayoutGraph, Path, Combination
 
 
-def random_layout(length_x, length_y, node_types):
+def random_layout(length_x, length_y, variant_mixes: dict) -> LayoutGraph:
     """TODO: Create a random layout with the given dimensions and node types"""
+    
+    num_cells = length_x*length_y # The number of cells in the area where stations can be placed
+    num_shuttles = 15
+    
+    node_types = []
+    for mix in variant_mixes:
+        for type in variant_mixes[mix]:
+            if variant_mixes[mix][type] > 0 and type not in node_types: node_types.append(type)
+    
+    # Select a random number of stations to place
+    num_stations = random.randrange(len(node_types), min(num_shuttles, num_cells))
+    
+    station_types = [node for node in node_types]
+    for _ in range(num_stations-len(node_types)):
+        station_types.append(random.choice(node_types))
+    
+    idx_placements = random.sample(range(num_cells), num_stations)
 
-    raise NotImplementedError("This function is not implemented yet.")
+    nodes = ['null' for _ in range(num_cells)]
+    for i, idx_placement in enumerate(idx_placements):
+        nodes[idx_placement] = station_types[i]
+    
+    layout = {'nodes': nodes,
+              'length_x': length_x,
+              'length_y': length_y}
+    
+    return layout
 
 def find_paths(layout, weights, prod_order) -> dict:
     """TODO: Find all paths for a given production order"""
