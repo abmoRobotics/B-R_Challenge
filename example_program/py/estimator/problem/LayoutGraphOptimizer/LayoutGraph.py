@@ -180,7 +180,10 @@ class LayoutGraph():
         # This function is used as an heuristic for knn to find the nearest(cheapest) neighbors.
     def heuristic_for_knn(self, point1, point2):
         """ Right now the heuristic is just the Euclidean distance between two points."""
-        heuristic = math.sqrt(sum((p1 - p2) ** 2 for p1, p2 in zip(point1, point2)))
+        # heuristic = math.sqrt(sum((p1 - p2) ** 2 for p1, p2 in zip(point1, point2)))
+        heuristic = 0
+        for i in range(len(point1)):
+            heuristic += (point1[i] - point2[i]) ** 2
         # Here we penalize the shuttle for moving to the same station.
         if heuristic == 0: heuristic = 2 
         # Here we disallow the shuttle to move backwards, because it is not allowed to do so.
