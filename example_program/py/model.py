@@ -21,14 +21,14 @@ class Model:
 
         # New approach for shuttles
         n_shuttles = 15
-        self.new_shuttles = ShuttleManager(n_shuttles)
+        self.shuttleManager = ShuttleManager(n_shuttles)
 
     def get_initial_mixes(self, columns):
         # TODO: Implement your own method
         mixes = []
         mix_count = {mix: 0 for mix in self.combinations}
         for col in range(columns):
-            shuttle: Shuttle = self.new_shuttles.get_shuttle_by_id(col)
+            shuttle: Shuttle = self.shuttleManager.get_shuttle_by_id(col)
             
             try:
                 shuttle.set_initial_mix_set(True)
@@ -68,42 +68,42 @@ class Model:
                 mix = order['id']
 
 
-        self.new_shuttles.get_shuttle_by_id(shuttleId).set_current_pos('start')
-        self.new_shuttles.get_shuttle_by_id(shuttleId).set_current_mix(mix)
+        self.shuttleManager.get_shuttle_by_id(shuttleId).set_current_pos('start')
+        self.shuttleManager.get_shuttle_by_id(shuttleId).set_current_mix(mix)
         return mix
     
     def get_current_mix (self, shuttleId):
-        return self.new_shuttles.get_shuttle_by_id(shuttleId).get_current_mix()
+        return self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_mix()
     
-    def get_initial_move(self, shuttleId):
-        return self.new_shuttles.get_shuttle_by_id(shuttleId).get_next_move()
+    # def get_initial_move(self, shuttleId):
+    #     return self.shuttleManager.get_shuttle_by_id(shuttleId).get_next_move()
     
     def get_initial_moves (self, columns, paths):
         moves = []
         for i in range(columns):
-            shuttle = self.new_shuttles.get_shuttle_by_id(i)
             movements, _ = get_movement_instructions_from_path(paths[i])
+            shuttle = self.shuttleManager.get_shuttle_by_id(i)
             shuttle.set_movements(movements)
             moves.append({
                 "shuttleId": str(shuttle.get_id()),
-                "move": shuttle.get_next_move()
+                "move": shuttle.get_initial_move()
             })
 
         return moves
     def get_next_move (self, shuttleId):
-        direction = None
-        if self.new_shuttles.get_shuttle_by_id(shuttleId).get_current_mix() != ('' or None):
-            direction = self.new_shuttles.get_shuttle_by_id(shuttleId).get_next_move()
-        return direction
+        # direction = None
+        # if self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_mix() != ('' or None):
+        #     direction = self.shuttleManager.get_shuttle_by_id(shuttleId).get_next_move()
+        return self.shuttleManager.get_shuttle_by_id(shuttleId).get_next_move()
     
     def get_current_move (self, shuttleId):
         direction = None
-        if self.new_shuttles.get_shuttle_by_id(shuttleId).get_current_mix() != ('' or None):
-            direction = self.new_shuttles.get_shuttle_by_id(shuttleId).get_current_move()
+        if self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_mix() != ('' or None):
+            direction = self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_move()
         return direction
 
     def is_move_reset(self, shuttleId):
-        return self.new_shuttles.get_shuttle_by_id(shuttleId).is_move_reset()
+        return self.shuttleManager.get_shuttle_by_id(shuttleId).is_move_reset()
     
     def get_stations_to_visit (self, mixId) -> list[str]:
         """Get a list of stations to visit for a given mix
@@ -187,7 +187,7 @@ class Model:
         return path_node_segments
     
     def set_next_movement (self, shuttleId, mixId, movements):
-        shuttle = self.new_shuttles.get_shuttle_by_id(shuttleId)
+        shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         shuttle.set_current_mix(mixId) # set current mix
         shuttle.set_movements(movements) # set movements
         shuttle.set_initial_mix_set(True) # set initial mix 
