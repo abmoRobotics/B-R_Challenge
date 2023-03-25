@@ -75,9 +75,6 @@ class Model:
     def get_current_mix (self, shuttleId):
         return self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_mix()
     
-    # def get_initial_move(self, shuttleId):
-    #     return self.shuttleManager.get_shuttle_by_id(shuttleId).get_next_move()
-    
     def get_initial_moves (self, columns, paths):
         moves = []
         for i in range(columns):
@@ -91,9 +88,6 @@ class Model:
 
         return moves
     def get_next_move (self, shuttleId):
-        # direction = None
-        # if self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_mix() != ('' or None):
-        #     direction = self.shuttleManager.get_shuttle_by_id(shuttleId).get_next_move()
         return self.shuttleManager.get_shuttle_by_id(shuttleId).get_next_move()
     
     def get_current_move (self, shuttleId):
