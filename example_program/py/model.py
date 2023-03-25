@@ -112,7 +112,7 @@ class Model:
             movements, _ = get_movement_instructions_from_path(paths[i])
             shuttle.set_movements(movements)
             moves.append({
-                "shuttleId": shuttle.get_id(),
+                "shuttleId": str(shuttle.get_id()),
                 "move": shuttle.get_next_move()
             })
 
