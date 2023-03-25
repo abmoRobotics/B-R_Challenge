@@ -40,7 +40,7 @@ class Shuttle:
             return None
 
     def get_current_move(self):
-        if self.current_move_pos < len(self.movements):
+        if self.current_move_pos < len(self.movements) and self.current_mix != ('' or None):
             return self.movements[self.current_move_pos]
         else:
             return None
