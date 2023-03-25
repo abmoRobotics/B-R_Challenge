@@ -23,7 +23,7 @@ class Model:
         n_shuttles = 15
         self.shuttleManager = ShuttleManager(n_shuttles)
 
-    def get_initial_mixes(self, columns):
+    def get_initial_mixes(self, columns: int) -> List[dict]:
         # TODO: Implement your own method
         mixes = []
         mix_count = {mix: 0 for mix in self.combinations}
@@ -58,7 +58,7 @@ class Model:
         
         return mixes
     
-    def get_next_mix (self, shuttleId):
+    def get_next_mix (self, shuttleId: int) -> str:
         '''Get the next mix with the least orders currently in progress (least WIP)'''
         mix = None
         mix_least_WIP = sys.maxsize
@@ -72,8 +72,7 @@ class Model:
         self.shuttleManager.get_shuttle_by_id(shuttleId).set_current_mix(mix)
         return mix
     
-    ### SIMPLE GETTERS ###
-    def get_current_mix (self, shuttleId):
+    def get_current_mix (self, shuttleId: int) -> str:
         """ Get the current mix for a given shuttle
         
         Args:
@@ -84,7 +83,7 @@ class Model:
             """
         return self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_mix()
     
-    def get_initial_moves (self, columns, paths):
+    def get_initial_moves (self, columns: int, paths: list) -> list:
         """ Get the initial moves for each shuttle,
         only to be called once at the start of the simulation.
         
@@ -107,7 +106,7 @@ class Model:
 
         return moves
    
-    def get_next_move (self, shuttleId):
+    def get_next_move (self, shuttleId: int):
         """ Get the next move for a given shuttle
         
         Args:
@@ -118,13 +117,28 @@ class Model:
         """
         return self.shuttleManager.get_shuttle_by_id(shuttleId).get_next_move()
     
-    def get_current_move (self, shuttleId):
+    def get_current_move (self, shuttleId: int):
+        """ Get the current move for a given shuttle
+        
+        Args:
+            shuttleId (int): The shuttle id
+            
+        Returns:
+            move (string): The current move of the shuttle either 'f', 'b', 'l', 'r'
+        """
         return self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_move()
 
-    def is_move_reset(self, shuttleId):
+    def is_move_reset(self, shuttleId: int) -> bool:
+        """ Check if the shuttle has reached the start position
+        
+        Args:
+            shuttleId (int): The shuttle id
+        
+        Returns:
+            is_reset (bool): True if the shuttle has reached the start position"""
         return self.shuttleManager.get_shuttle_by_id(shuttleId).is_move_reset()
     
-    def get_stations_to_visit (self, mixId) -> list[str]:
+    def get_stations_to_visit (self, mixId: int) -> list[str]:
         """Get a list of stations to visit for a given mix
         Parameters:
             mixId {string} -- The mix id
@@ -135,22 +149,29 @@ class Model:
         
         return self.convert_combination_to_stations(best_combination)
 
-
     def convert_combination_to_stations(self, combination: Combination) -> list[str]:
+        """ Convert a combination to a list of stations to visit
+        
+        Arguments:
+            combination {Combination} -- The combination to convert
+            
+        Returns:
+            stations_to_visit {list} -- A list of stations to visit"""
         stations_to_visit = []
         for node in combination.nodes:
             stations_to_visit.append(f'{node[0]}_{node[1]}')
             
         return stations_to_visit
     
-    def find_optimal_path_from_stations (self, stations_to_visit, start_node = 'start') -> list[Path]:
+    def find_optimal_path_from_stations (self, stations_to_visit: list, start_node = 'start') -> list[Path]:
         """Find the segmented optimal path from a list of stations to the next station
         
-        Arguments:
+        Args:
             stations {list} -- A list of stations
+            start_node {str} -- The start node of the path
             
         Returns:
-            path {Path} -- The path consisting of the nodes to visit
+            path_nodes {list[Path]} -- A list of nodes in the path
         """
         
         # Remove nodes that are not available for the route.
@@ -205,7 +226,16 @@ class Model:
         
         return path_node_segments
     
-    def set_next_movement (self, shuttleId, mixId, movements):
+    def set_next_movement (self, shuttleId: int, mixId: int, movements: list):
+        """ Set the next movement for a given shuttle,
+        and set the initial mix to true.
+        
+        Args:
+            shuttleId (int): The shuttle id 
+            mixId (int): The mix id of the format: ["mix_a", "mix_b", "mix_c", "..."]
+            movements (list): A list of movements in the format: ["f", "b", "l", "r", "f", "b", "l", "r", ...]
+            """
+        
         shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         shuttle.set_current_mix(mixId) # set current mix
         shuttle.set_movements(movements) # set movements
