@@ -23,7 +23,6 @@ class Model:
         n_shuttles = 15
         self.new_shuttles = ShuttleManager(n_shuttles)
 
-    # Not fixed
     def get_initial_mixes(self, columns):
         # TODO: Implement your own method
         mixes = []
@@ -73,11 +72,9 @@ class Model:
         self.new_shuttles.get_shuttle_by_id(shuttleId).set_current_mix(mix)
         return mix
     
-    # Fixed
     def get_current_mix (self, shuttleId):
         return self.new_shuttles.get_shuttle_by_id(shuttleId).get_current_mix()
     
-    # Fixed
     def get_initial_move(self, shuttleId):
         return self.new_shuttles.get_shuttle_by_id(shuttleId).get_next_move()
     
