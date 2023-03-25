@@ -74,13 +74,6 @@ for mix_type in VARIANT_MIXES:
     # Keep only the 50 best combinations in order from best to worst
     reduced_combinations[mix_type] = get_best_combinations(reduced_combinations[mix_type], 50)
 
-# ### FOR TESTING ###
-randomLayout = random_layout(7, 6, VARIANT_MIXES)
-randomgraph = LayoutGraph(randomLayout, WEIGHTS)
-randomgraph.plot(COLOR_MAP)
-# ### FOR TESTING ###
-
-
 # Call the algorithm to find the shortest or all paths for the variant mix
 
 # Print found paths

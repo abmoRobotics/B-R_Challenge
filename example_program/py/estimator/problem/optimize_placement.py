@@ -1,7 +1,8 @@
 import random
 from tqdm import tqdm
 from LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path
-from LayoutGraphOptimizer.utils import get_movement_instructions_from_path, random_layout, find_paths, calculate_costs
+from LayoutGraphOptimizer.utils import random_layout, find_paths, calculate_costs, find_optimal_station_amounts
+from find_paths import VARIANT_MIXES
 
 
 ###### CONSTANTS ######
@@ -70,7 +71,13 @@ STATION_PROCESSING_TIME = {
 EPOCHS = 1000    # How many iterations of samples should be taken from the solution space (if we brute force it)
 SIZE_X = 4      # Size of the layout
 SIZE_Y = 4      # Size of the layout
+BOARD_DIMENSIONS = (SIZE_X, SIZE_Y)
 
+station_amounts = find_optimal_station_amounts(BOARD_DIMENSIONS, PROD_ORDER, STATION_PLACEMENT_COST, STATION_PROCESSING_TIME)
+
+randomLayout = random_layout(BOARD_DIMENSIONS, VARIANT_MIXES)
+randomgraph = LayoutGraph(randomLayout, STATION_PROCESSING_TIME)
+randomgraph.plot(COLOR_MAP)
 
 # Iterate through samples and find the best solution. Can you think of a better way to find the best solution using less naive optimization methods?
 for epoch in tqdm(range(0, EPOCHS)):

@@ -1,15 +1,15 @@
 import networkx as nx
 import numpy as np
 import random
-
 from .LayoutGraph import LayoutGraph, Path, Combination
+from sys import maxsize
 
+NUM_SHUTTLES = 15
 
-def random_layout(length_x, length_y, variant_mixes: dict) -> LayoutGraph:
+def random_layout(board_dimensions: tuple, variant_mixes: dict) -> LayoutGraph:
     """TODO: Create a random layout with the given dimensions and node types"""
     
-    num_cells = length_x*length_y # The number of cells in the area where stations can be placed
-    num_shuttles = 15
+    num_cells = board_dimensions[0]*board_dimensions[1] # The number of cells in the area where stations can be placed
     
     node_types = []
     for mix in variant_mixes:
@@ -17,7 +17,7 @@ def random_layout(length_x, length_y, variant_mixes: dict) -> LayoutGraph:
             if variant_mixes[mix][type] > 0 and type not in node_types: node_types.append(type)
     
     # Select a random number of stations to place
-    num_stations = random.randrange(len(node_types), min(num_shuttles, num_cells))
+    num_stations = random.randrange(len(node_types), min(NUM_SHUTTLES, num_cells))
     
     station_types = [node for node in node_types]
     for _ in range(num_stations-len(node_types)):
@@ -30,10 +30,42 @@ def random_layout(length_x, length_y, variant_mixes: dict) -> LayoutGraph:
         nodes[idx_placement] = station_types[i]
     
     layout = {'nodes': nodes,
-              'length_x': length_x,
-              'length_y': length_y}
+              'length_x': board_dimensions[0],
+              'length_y': board_dimensions[1]}
     
     return layout
+
+def find_optimal_station_amounts(board_dimensions: tuple, production_order: dict, placement_costs: dict, processing_times: dict) -> dict:
+    # Determine how many station visits for each type are required by the production order
+    station_visits = {station_type: 0 for station_type in production_order['mix_a']['mix']}
+    for mix_type, items in production_order.items():
+        for station_type, val in items['mix'].items():
+            station_visits[station_type] += items['amount']*val
+    
+    # Connversion to numpy vectors and matrices
+    PC_vec = np.array([placement_costs[station] for station in placement_costs])
+    PT_vec = np.array([processing_times[station] for station in processing_times if station != 'null'])
+    SV_mat = np.diag([station_visits[station] for station in station_visits])
+    
+    optimal_stations = {'amounts': (), 
+                       'cost': maxsize}
+    max_stations = min(NUM_SHUTTLES, board_dimensions[0]*board_dimensions[1])
+    # Go through the possible station distributions based on the maximum number of stations allowed
+    for b in range(1, max_stations+1): # Blue stations
+        for y in range(1, max_stations+1-b):
+            for g in range(1, max_stations+1-b-y):
+                x_vec = np.array([b, y, g])
+                
+                # Calculating the cost for the given station distribution
+                cost = np.dot(x_vec, PC_vec) + max( np.divide(np.matmul(SV_mat, PT_vec), x_vec) )
+                
+                # If the cost is the lowest so far, save it
+                if cost < optimal_stations['cost']: 
+                    optimal_stations['amounts'] = (b, y, g)
+                    optimal_stations['cost'] = cost
+  
+    return optimal_stations
+    
 
 def find_paths(layout, weights, prod_order) -> dict:
     """TODO: Find all paths for a given production order"""
