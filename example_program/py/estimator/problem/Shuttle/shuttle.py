@@ -28,8 +28,12 @@ class Shuttle:
     def set_current_mix(self, current_mix):
         self.current_mix = current_mix
 
+    def get_initial_move(self):
+        self.current_move_pos += 1
+        return self.movements[self.current_move_pos]
+
     def get_next_move(self):
-        if self.current_move_pos + 1 < len(self.movements):
+        if self.current_move_pos + 1 < len(self.movements) and self.current_mix != ('' or None):
             self.current_move_pos += 1
             return self.movements[self.current_move_pos]
         else:
