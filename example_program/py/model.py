@@ -2,9 +2,10 @@ import json, sys
 import networkx as nx
 from estimator.problem.LayoutGraphOptimizer.utils import get_movement_instructions_from_path, get_best_combination, flatten
 from estimator.problem.LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path, Combination
+from estimator.problem.Shuttle.shuttle import Shuttle, ShuttleManager
 from estimator.problem.find_paths import VARIANT_MIXES
 from re import findall
-
+from typing import List
 class Model:
     def __init__(self, graph: LayoutGraph, combinations: dict):
         f = open('example_program/py/data/board.movements.json')
@@ -18,18 +19,26 @@ class Model:
         self.graph = graph
         self.combinations = combinations
 
+        # New approach for shuttles
+        n_shuttles = 15
+        self.new_shuttles = ShuttleManager(n_shuttles)
+
+    # Not fixed
     def get_initial_mixes(self, columns):
         # TODO: Implement your own method
         mixes = []
         mix_count = {mix: 0 for mix in self.combinations}
         for col in range(columns):
-            shuttle = self.shuttles[col]
+            shuttle: Shuttle = self.new_shuttles.get_shuttle_by_id(col)
+            #shuttle = self.shuttles[col]
             
             try:
                 #shuttle['movements'] = self.movements[shuttle['currentMix']][str(col)]['0']['instr']
-                shuttle['initialMixSet'] = True
+                #shuttle['initialMixSet'] = True
+                shuttle.set_initial_mix_set(True)
             except:
-                shuttle.movements = []
+                #shuttle.movements = []
+                shuttle.set_movements([])
             
             # Find the best mix for the given start column
             above_node_type = self.graph.G.nodes[f'{col}_0']['type']
@@ -47,13 +56,15 @@ class Model:
             mix_count[best_mix] += 1
             
             mixes.append({
-                "shuttleId": shuttle['shuttleId'],
+                #"shuttleId": shuttle['shuttleId'],
+                "shuttleId": shuttle.get_id(),
                 "mixId": best_mix,
                 "stationsToVisit": self.convert_combination_to_stations(best_combination)
             })
         
         return mixes
     
+    # Fixed TODO: clean up
     def get_next_mix (self, shuttleId):
         '''Get the next mix with the least orders currently in progress (least WIP)'''
         mix = None
@@ -63,82 +74,96 @@ class Model:
                 mix_least_WIP = order['started'] - order['completed']
                 mix = order['id']
 
-        for shuttle in self.shuttles:
-            if shuttle['shuttleId'] == shuttleId:
-                shuttle['currentMovePos'] = -1
-                shuttle['currentMix'] = mix
+        # for shuttle in self.shuttles:
+        #     if shuttle['shuttleId'] == shuttleId:
+        #         shuttle['currentMovePos'] = -1
+        #         shuttle['currentMix'] = mix
 
+
+        self.new_shuttles.get_shuttle_by_id(shuttleId).set_current_pos('start')
+        self.new_shuttles.get_shuttle_by_id(shuttleId).set_current_mix(mix)
         return mix
     
+    # Fixed
     def get_current_mix (self, shuttleId):
-        # TODO: Implement your own method
-        mix = None
-        for shuttle in self.shuttles:
-            if (shuttle['id'] == shuttleId):
-                mix = shuttle['currentMix']
-
-        return mix
+        return self.new_shuttles.get_shuttle_by_id(shuttleId).get_current_mix()
     
+    # Fixed
     def get_initial_move(self, shuttleId):
-        # TODO: Implement your own method
-        moves = None
-        for shuttle in self.shuttles:
-            if (shuttle['shuttleId'] == shuttleId):
-                shuttle['currentMovePos'] += 1
-                moves = shuttle['movements'][shuttle['currentMovePos']]
-
-        return moves
+        return self.new_shuttles.get_shuttle_by_id(shuttleId).get_next_move()
     
+    # Fixed TODO: clean up
     def get_initial_moves (self, columns, paths):
         # TODO: Implement your own method
+        # moves = []
+        # for j in range(columns):
+        #     shuttle = self.shuttles[j]
+        #     test = paths[j]
+        #     shuttle['movements'], _ = get_movement_instructions_from_path(paths[j])
+        #     shuttle['currentMovePos'] += 1
+        #     moves.append({
+        #         "shuttleId": shuttle['shuttleId'],
+        #         "move": shuttle['movements'][shuttle['currentMovePos']]
+        #     })
+        
         moves = []
-        for j in range(columns):
-            shuttle = self.shuttles[j]
-            test = paths[j]
-            shuttle['movements'], _ = get_movement_instructions_from_path(paths[j])
-            shuttle['currentMovePos'] += 1
+        for i in range(columns):
+            shuttle = self.new_shuttles.get_shuttle_by_id(i)
+            movements, _ = get_movement_instructions_from_path(paths[i])
+            shuttle.set_movements(movements)
             moves.append({
-                "shuttleId": shuttle['shuttleId'],
-                "move": shuttle['movements'][shuttle['currentMovePos']]
+                "shuttleId": shuttle.get_id(),
+                "move": shuttle.get_next_move()
             })
 
         return moves
-    
+    # Fixed TODO: clean up
     def get_next_move (self, shuttleId):
         # TODO: Implement your own method
-        direction = None
-        for shuttle in self.shuttles:
-            if shuttle['shuttleId'] == shuttleId and shuttle['currentMix'] != '' and shuttle['currentMix'] is not None:
-                shuttle['currentMovePos'] += 1
-                try:
-                    direction = shuttle['movements'][shuttle['currentMovePos']]
-                except:
-                    print ('get_move_error')
+        # direction = None
+        # for shuttle in self.shuttles:
+        #     if shuttle['shuttleId'] == shuttleId and shuttle['currentMix'] != '' and shuttle['currentMix'] is not None:
+        #         shuttle['currentMovePos'] += 1
+        #         try:
+        #             direction = shuttle['movements'][shuttle['currentMovePos']]
+        #         except:
+        #             print ('get_move_error')
 
+        direction = None
+        if self.new_shuttles.get_shuttle_by_id(shuttleId).get_current_mix() != ('' or None):
+            direction = self.new_shuttles.get_shuttle_by_id(shuttleId).get_next_move()
         return direction
     
+    # Fixed TODO: clean up
     def get_current_move (self, shuttleId):
         # TODO: Implement your own method
+        # direction = None
+        # for shuttle in self.shuttles:
+        #     if shuttle['shuttleId'] == shuttleId and shuttle['currentMix'] != '' and shuttle['currentMix'] is not None:
+        #         try:
+        #             direction = shuttle['movements'][shuttle['currentMovePos']]
+        #         except:
+        #             print ('get_move_error')
         direction = None
-        for shuttle in self.shuttles:
-            if shuttle['shuttleId'] == shuttleId and shuttle['currentMix'] != '' and shuttle['currentMix'] is not None:
-                try:
-                    direction = shuttle['movements'][shuttle['currentMovePos']]
-                except:
-                    print ('get_move_error')
-
+        if self.new_shuttles.get_shuttle_by_id(shuttleId).get_current_mix() != ('' or None):
+            direction = self.new_shuttles.get_shuttle_by_id(shuttleId).get_current_move()
         return direction
 
+    # Fixed TODO: clean up
     def is_move_reset(self, shuttleId):
         # TODO: Implement your own method
-        isMoveReset = False
-        for shuttle in self.shuttles:
-            if shuttle['shuttleId'] == shuttleId:
-                isMoveReset = (shuttle['currentMovePos'] != -1 or not shuttle['intialMixSet'])
-        
-        return isMoveReset
+        # isMoveReset = False
+        # self.new_shuttles.get_shuttle_by_id(shuttleId)
+        # for shuttle in self.shuttles:
+        #     if shuttle['shuttleId'] == shuttleId:
+        #         isMoveReset = (shuttle['currentMovePos'] != -1 or not shuttle['intialMixSet'])
+        b = self.new_shuttles
+        a = self.new_shuttles.get_shuttle_by_id(shuttleId)
+        return self.new_shuttles.get_shuttle_by_id(shuttleId).is_move_reset()
     
+    # TODO: remove if not needed
     def get_station_pos(self, stationId: str) -> tuple:
+        return None
         translation = [7, -1]
         newPos = [0, 0]
         
@@ -149,6 +174,7 @@ class Model:
         
         return tuple(newPos)
     
+    # Does not need to be fixed
     def get_stations_to_visit (self, mixId) -> list[str]:
         """Get a list of stations to visit for a given mix
         Parameters:
@@ -160,6 +186,7 @@ class Model:
         
         return self.convert_combination_to_stations(best_combination)
 
+    # Does not need to be fixed
     def convert_combination_to_stations(self, combination: Combination) -> list[str]:
         stations_to_visit = []
         for node in combination.nodes:
@@ -167,6 +194,7 @@ class Model:
             
         return stations_to_visit
     
+    # Does not need to be fixed
     def find_optimal_path_from_stations (self, stations_to_visit, start_node = 'start') -> list[Path]:
         """Find the segmented optimal path from a list of stations to the next station
         
@@ -229,20 +257,7 @@ class Model:
         
         return path_node_segments
 
-    def get_start_station (self, mixId):
-        # TODO: Implement your own method
-        optimalCost = sys.maxsize
-        optimalStartingPos = None
-        optimalPos = None
-        for startingPos, startingData in self.movements[mixId].items():
-            for idx, movementData in startingData.items():
-                if optimalCost > movementData['cost']:
-                    optimalCost = movementData['cost']
-                    optimalPos = idx
-                    optimalStartingPos = startingPos
-
-        return { 'cost': optimalCost, 'pos': optimalPos, 'start': optimalStartingPos }
-    
+    # Fixed # TODO: clean up
     def set_next_movement (self, shuttleId, mixId, movements):
         # TODO: Implement your own method
         for shuttle in self.shuttles:
@@ -251,6 +266,11 @@ class Model:
                 shuttle['movements'] = movements
                 shuttle['intialMixSet'] = True
                 shuttle['currentMovePos'] = -1
+
+        self.new_shuttles.get_shuttle_by_id(shuttleId).set_current_mix(mixId) # set current mix
+        self.new_shuttles.get_shuttle_by_id(shuttleId).set_movements(movements) # set movements
+        self.new_shuttles.get_shuttle_by_id(shuttleId).set_initial_mix_set(True) # set initial mix 
+        self.new_shuttles.get_shuttle_by_id(shuttleId).reset_movement() # reset movement
     
     def setOnce (self, once):
         self.once = once

@@ -5,6 +5,7 @@ from threading import Timer
 from threading import Thread
 from time import sleep
 from model import Model, get_movement_instructions_from_path, flatten
+
 from estimator.problem.find_paths import global_graph, reduced_combinations
 
 # static data for connecting
