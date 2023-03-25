@@ -57,7 +57,7 @@ class Model:
             
             mixes.append({
                 #"shuttleId": shuttle['shuttleId'],
-                "shuttleId": shuttle.get_id(),
+                "shuttleId": str(shuttle.get_id()),
                 "mixId": best_mix,
                 "stationsToVisit": self.convert_combination_to_stations(best_combination)
             })
