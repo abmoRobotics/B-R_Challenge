@@ -72,10 +72,29 @@ class Model:
         self.shuttleManager.get_shuttle_by_id(shuttleId).set_current_mix(mix)
         return mix
     
+    ### SIMPLE GETTERS ###
     def get_current_mix (self, shuttleId):
+        """ Get the current mix for a given shuttle
+        
+        Args:
+            shuttleId (int): The shuttle id
+            
+        Returns:
+            mix (string): The current mix of the shuttle
+            """
         return self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_mix()
     
     def get_initial_moves (self, columns, paths):
+        """ Get the initial moves for each shuttle,
+        only to be called once at the start of the simulation.
+        
+        Args:
+            columns (int): The number of columns
+            paths (list): A list of paths for each shuttle
+        
+        Returns:
+            moves (list): A list of moves for each shuttle
+            """
         moves = []
         for i in range(columns):
             movements, _ = get_movement_instructions_from_path(paths[i])
@@ -87,14 +106,20 @@ class Model:
             })
 
         return moves
+   
     def get_next_move (self, shuttleId):
+        """ Get the next move for a given shuttle
+        
+        Args:
+            shuttleId (int): The shuttle id
+            
+        Returns:
+            move (string): The next move of the shuttle either 'f', 'b', 'l', 'r'
+        """
         return self.shuttleManager.get_shuttle_by_id(shuttleId).get_next_move()
     
     def get_current_move (self, shuttleId):
-        direction = None
-        if self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_mix() != ('' or None):
-            direction = self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_move()
-        return direction
+        return self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_move()
 
     def is_move_reset(self, shuttleId):
         return self.shuttleManager.get_shuttle_by_id(shuttleId).is_move_reset()
