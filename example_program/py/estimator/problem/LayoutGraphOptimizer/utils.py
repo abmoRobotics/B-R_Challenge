@@ -39,8 +39,8 @@ def get_movement_instructions_from_path(path: Path):
     # If the difference in position is (-1, 0), then the robot needs to move left
 
     # Check validity of path with start and end node
-    if (path[0]['type'] != 'start' and 'start' not in path[0]['name']) or path[-1]['type'] != 'end':
-        raise ValueError('Path does not start with start node or end with end node')
+   # if (path[0]['type'] != 'start' and 'start' not in path[0]['name']) or path[-1]['type'] != 'end':
+    #    raise ValueError('Path does not start with start node or end with end node')
         
 
     movement_instructions = []
