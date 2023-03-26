@@ -97,6 +97,9 @@ def switch_status (client: mqtt_client, telegram):
                 
                 # Update the global graph in the model for the first path segment
                 model.graph.update_weights(pathSegments[0], model.combinations)
+
+                # Set initial positions
+                model.set_start_position(mix['shuttleId'],x=col)
             
             sleep(sleeper)
             
@@ -106,6 +109,8 @@ def switch_status (client: mqtt_client, telegram):
                 send_data(client, move_telegram)
 
     elif telegram['method'] == "MOVE_DONE":
+        # Update current position of shuttle
+        model.update_position(telegram['data']['shuttleId'])
         if telegram['data']['inuse'] == False:
             dir = model.get_next_move(telegram['data']['shuttleId'])
             if (dir is not None):
@@ -198,7 +203,7 @@ def switch_status (client: mqtt_client, telegram):
                     # Convert the path to movements
                     movements, startPos = get_movement_instructions_from_path(shortestPath)
                     startStation = ('Start_0' + str(startPos))
-                    
+                    model.set_start_position(telegram['data']['shuttleId'], x=startPos)
                     # Set the next movement for the given shuttle
                     model.set_next_movement(telegram['data']['shuttleId'], mix, movements)
                     
