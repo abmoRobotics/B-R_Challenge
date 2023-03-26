@@ -136,7 +136,12 @@ def switch_status (client: mqtt_client, telegram):
             if (telegram['error']['errorId'] == 20001 or telegram['error']['errorId'] == 20002):
                 # If the target station is locked (20001) or still processing (20002) keep sending the same telegram
                 # over and over again untill the desired station is free
+                #dir = model.get_current_move(telegram['error']['shuttleId'])
+                
+                # Replan if station is occupied or processing
+                model.replan(telegram['error']['shuttleId'])
                 dir = model.get_current_move(telegram['error']['shuttleId'])
+
                 if (dir is not None):
                     print('starting timer to move next in 2 sec')
                     thread = Thread(target=threadedNextMove, args=(client, telegram['error']['shuttleId'], dir))

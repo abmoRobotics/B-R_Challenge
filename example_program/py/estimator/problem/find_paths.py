@@ -133,4 +133,4 @@ store_movements = {
 #    outfile.write(json_object)
 
 # Plot the graph (without paths)
-#global_graph.plot(COLOR_MAP)
+global_graph.plot(COLOR_MAP)

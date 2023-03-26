@@ -50,6 +50,11 @@ class Model:
                         best_combination = combination
             mix_count[best_mix] += 1
             
+
+            # Set attribute for processing stations to shuttle.
+            shuttle.set_processing_stations(self.convert_combination_to_stations(best_combination))
+
+
             mixes.append({
                 "shuttleId": str(shuttle.get_id()),
                 "mixId": best_mix,
@@ -163,7 +168,7 @@ class Model:
             
         return stations_to_visit
     
-    def find_optimal_path_from_stations (self, stations_to_visit: list, start_node = 'start') -> list[Path]:
+    def find_optimal_path_from_stations (self, stations_to_visit: list, start_node = 'start', remove_edges = None) -> list[Path]:
         """Find the segmented optimal path from a list of stations to the next station
         
         Args:
@@ -176,7 +181,8 @@ class Model:
         
         # Remove nodes that are not available for the route.
         reduced_graph = self.graph.reduce(stations_to_visit)
-        
+        if not remove_edges is None:
+            reduced_graph.G.remove_edges_from(remove_edges)
         # Add start and end nodes to the list of stations to visit
         stations_to_visit = [start_node] + stations_to_visit + ['end']        
         
@@ -253,7 +259,7 @@ class Model:
         movement_command = shuttle.get_current_move()
         shuttle.update_position(movement_command)
 
-    def set_start_position(self, shuttleId: int, x: int, y = 0):
+    def set_start_position(self, shuttleId: int, x: int, y = 'start'):
         """ Set the start position of the shuttle
         
         Args:
@@ -263,6 +269,35 @@ class Model:
         shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         shuttle.set_start_position(x_pos=x, y_pos=y)
 
+    def replan(self, shuttleId: int):
+        """ Replan the path for the shuttle
+        
+        Args:
+            shuttleId (int): The shuttle id"""
+        
+        shuttle: Shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
+        start_position = shuttle.get_current_position()
+        stations = shuttle.get_processing_stations()
+
+        edges_to_remove = [(shuttle.get_current_position(), shuttle.get_next_position())]
+        path = self.find_optimal_path_from_stations(stations, start_node=start_position, remove_edges=edges_to_remove)
+        path = flatten(path)
+
+        
+        movements, _ = get_movement_instructions_from_path(path)
+        
+        # Change shuttle attributes
+        shuttle.set_movements(movements)
+        shuttle.reset_movement()
+
+    # TODO: Implement this function
+    def replan_combination():
+        pass
+
+    def create_graphs(self):
+        pass
+
+    
     def setOnce (self, once):
         self.once = once
 
