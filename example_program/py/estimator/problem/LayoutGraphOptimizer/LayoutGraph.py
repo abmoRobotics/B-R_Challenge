@@ -99,6 +99,13 @@ class LayoutGraph():
                     node_color_bottom = layout['nodes'][indx_bottom]
                     self.G.add_edge(f"{x}_{y}", f"{x}_{y+1}", weight=weights[node_color_bottom])
 
+                # NEW
+                if 1 < y < layout['length_y'] - 1:
+                    indx_bottom = (y+1) * layout['length_x'] + x
+                    node_color_bottom = layout['nodes'][indx_bottom]
+                    self.G.add_edge(f"{x}_{y}", f"{x}_{y-1}", weight=weights[node_color_bottom])
+
+
                 # Add edge to the left
                 if x > 0:
                     indx_left = y * layout['length_x'] + x - 1
