@@ -9,6 +9,20 @@ class Shuttle:
         self.current_position = (0, 0)
         self.initial_mix_set = False
 
+
+    def update_position(self, movement_command: str):
+        if movement_command == 'f':
+            self.current_position = (self.current_position[0], self.current_position[1] + 1)
+        elif movement_command == 'b':
+            self.current_position = (self.current_position[0], self.current_position[1] - 1)
+        elif movement_command == 'r':
+            self.current_position = (self.current_position[0] + 1, self.current_position[1])
+        elif movement_command == 'l':
+            self.current_position = (self.current_position[0] - 1, self.current_position[1])
+
+    def set_start_position(self, x_pos: int, y_pos: int):
+        self.current_position = (x_pos, y_pos)
+
     def set_movements(self, movements):
         self.movements = movements
         self.current_move_pos = -1
@@ -48,8 +62,6 @@ class Shuttle:
     def reset_movement(self):
         self.current_move_pos = -1
     
-    def update_position(self, new_position):
-        self.current_position = new_position
 
     def get_movement(self, goal_position):
         x_diff = goal_position[0] - self.current_position[0]
@@ -80,7 +92,6 @@ class ShuttleManager:
     
     def get_shuttle_by_id(self, shuttle_id):
         for shuttle in self.shuttles:
-            print(shuttle.get_id())
             if shuttle.get_id() == int(shuttle_id):
                 return shuttle
         return None

@@ -233,8 +233,7 @@ class Model:
         Args:
             shuttleId (int): The shuttle id 
             mixId (int): The mix id of the format: ["mix_a", "mix_b", "mix_c", "..."]
-            movements (list): A list of movements in the format: ["f", "b", "l", "r", "f", "b", "l", "r", ...]
-            """
+            movements (list): A list of movements in the format: ["f", "b", "l", "r", "f", "b", "l", "r", ...]"""
         
         shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         shuttle.set_current_mix(mixId) # set current mix
@@ -242,6 +241,28 @@ class Model:
         shuttle.set_initial_mix_set(True) # set initial mix 
         shuttle.reset_movement() # reset movement
     
+    ## New functions ##
+
+    def update_position(self, shuttleId: int):
+        """ Update the current position of the shuttle
+        
+        Args:
+            shuttleId (int): The shuttle id"""
+        
+        shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
+        movement_command = shuttle.get_current_move()
+        shuttle.update_position(movement_command)
+
+    def set_start_position(self, shuttleId: int, x: int, y = 0):
+        """ Set the start position of the shuttle
+        
+        Args:
+            shuttleId (int): The shuttle id
+            position (list): The start position of the shuttle"""
+        
+        shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
+        shuttle.set_start_position(x_pos=x, y_pos=y)
+
     def setOnce (self, once):
         self.once = once
 
