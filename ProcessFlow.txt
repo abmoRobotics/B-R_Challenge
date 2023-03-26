@@ -14,3 +14,17 @@ Step 6: Use the path to make the shuttle move (Anton)
 
 
 
+Anton:
+Problem right now, if there is a "collision" the replan function is called, this function creates a new placement
+However right now this does not work, for two reason:
+1) The shuttles cannot move backwards and thus cannot plan a new path to the production station
+2) Consequently, a new plan has to be made(combination of production orders), however since 
+some of the tasks have already been completed, the new plan cannot be planned based on best_cominations.
+3) Therefore a new best_combination has to be made, that can run on the fly.
+
+ - Implement replanning method (Not solved yet)
+1) Find all distinct permutations for mixes left in the production order
+2) For each distinct permutations create a graph 
+3) perform A* or djikstra
+
+focus on replan
