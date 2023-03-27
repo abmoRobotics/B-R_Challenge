@@ -160,15 +160,16 @@ def switch_status (client: mqtt_client, telegram):
             
             if telegram['error']['errorId'] == 10006:
                 # If the shuttle is trying to move outside of the scope of the board, do something else
-                    dir = model.get_current_move(telegram['error']['shuttleId'])
-                    if dir == 'l': 
-                        dir = 'r'
-                    if dir == 'r': 
-                        dir = 'l'
-                    # print('starting timer to move next in 2 sec')
+                    # dir = model.get_current_move(telegram['error']['shuttleId'])
+                    # if dir == 'l': 
+                    #     dir = 'r'
+                    # if dir == 'r': 
+                    #     dir = 'l'
+                    # # print('starting timer to move next in 2 sec')
                     # TODO: handle an error where we are trying to move outsie of the scope 
                     # thread = Thread(target=threadedNextMove, args=(client, telegram['error']['startLane'], dir))
                     # thread.start()
+                pass
         else:
             print('Strange things arrived', telegram)
 
