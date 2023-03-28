@@ -22,7 +22,7 @@ LAYOUT = {
 WEIGHTS = {
     'b': 3,
     'y': 3,
-    'g': 5,
+    'g': 3,
     'null': 1,
 }
 
