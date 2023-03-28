@@ -164,10 +164,6 @@ class LayoutGraph():
         
         return cost
     
-    def manhattan_distance(self, pos1, pos2) -> int:
-        """Find the Manhattan distance between pos1 and pos2"""
-        return abs(pos2[0] - pos1[0]) + abs(pos2[1] - pos1[1])
-    
     def is_valid(self, combination: Combination, mix: dict) -> bool:
         """Return whether or not a given combination is valid based on the mix"""
         temp_mix = mix.copy()
@@ -186,19 +182,14 @@ class LayoutGraph():
         
         return True
     
-        # This function is used as an heuristic for knn to find the nearest(cheapest) neighbors.
     def heuristic_for_knn(self, point1, point2):
-        """ Right now the heuristic is just the Euclidean distance between two points."""
-        # heuristic = math.sqrt(sum((p1 - p2) ** 2 for p1, p2 in zip(point1, point2)))
-        heuristic = 0
-        for i in range(len(point1)):
-            heuristic += (point1[i] - point2[i]) ** 2
+        """ Right now the heuristic is just the Manhattan distance between two points."""
         # Here we penalize the shuttle for moving to the same station.
-        if heuristic == 0: heuristic = 2 
+        if point1 == point2: return 2
         # Here we disallow the shuttle to move backwards, because it is not allowed to do so.
-        if point1[1] > point2[1]: heuristic = sys.maxsize
-
-        return heuristic
+        elif point1[1] > point2[1]: return sys.maxsize
+        # Otherwise, we simply return the Manhattan distance between the two points
+        else: return self.manhattan_distance(point1, point2)
     
     def knn(self, point, points, k):
         """ Returns the k nearest neighbors of a point.
@@ -215,7 +206,7 @@ class LayoutGraph():
         distances = [(self.heuristic_for_knn(point, other_point), other_point) for other_point in points] 
         heapq.heapify(distances)    # This is a min-heap, so the smallest distance will be at the top.
         return [heapq.heappop(distances)[1] for _ in range(min(k, len(distances)))] # Return the k nearest neighbors
-
+    
     def cartesian_product(self, k=None, *iterables):
         """ Returns the Cartesian product of the iterables.
         
@@ -288,7 +279,7 @@ class LayoutGraph():
                 item = list(item)
 
                 # Only keep the valid combinations (i.e. those that don't go backwards) and assign the cost
-                #if not self.is_valid(Combination(item), mix): continue # TODO: Can be removed because we already check this in the heuristic
+                if not self.is_valid(Combination(item), mix): continue # TODO: Can be removed because we already check this in the heuristic
 
                 final_combinations.append(Combination(item, self.get_cost(Combination(item))))
 
@@ -366,3 +357,10 @@ class LayoutGraph():
         nx.draw_networkx(self.G, with_labels=True, font_color='white', node_size=1000, node_color=colors, font_size=8, pos=pos)
         plt.show()
     
+    def manhattan_distance(self, pos1, pos2) -> int:
+        """Find the Manhattan distance between pos1 and pos2"""
+        return abs(pos2[0] - pos1[0]) + abs(pos2[1] - pos1[1])
+    
+    def euclidean_distance(self, pos1, pos2) -> float:
+        """Find the Euclidean distance between pos1 and pos2"""
+        return math.sqrt((pos2[0] - pos1[0]) ** 2 + (pos2[1] - pos1[1]) ** 2)

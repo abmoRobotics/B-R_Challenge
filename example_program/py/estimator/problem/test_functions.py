@@ -25,7 +25,7 @@ VARIANT_MIXES = {
     'mix_a': {
         'g': 4,
         'y': 1,
-        'b': 3
+        'b': 1
     },
     'mix_b': {
         'g': 0,
@@ -96,7 +96,7 @@ def test_combinatorial_time(k_range=4):
 
 def profile_func():
     graphGlobal = LayoutGraph(LAYOUT, WEIGHTS)
-    graphGlobal.get_all_valid_combinations(VARIANT_MIXES["mix_a"], k=2)
+    graphGlobal.find_combinations(VARIANT_MIXES["mix_a"], method="knn", k=2)
 
 
 def profile_combinatorial_time(k=2):
@@ -105,5 +105,5 @@ def profile_combinatorial_time(k=2):
 
 
 if __name__ == "__main__":
-    # test_combinatorial_time()
-    profile_combinatorial_time()
+    test_combinatorial_time()
+    #profile_combinatorial_time()
