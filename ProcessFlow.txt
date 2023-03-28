@@ -15,21 +15,15 @@ Step 6: Use the path to make the shuttle move (Anton)
 
 
 Anton:
-Problem right now, if there is a "collision" the replan function is called, this function creates a new placement
-However right now this does not work, for two reasons:
-1) The shuttles cannot move backwards and thus cannot plan a new path to the production station
-2) Consequently, a new plan has to be made(combination of production orders), however since 
-some of the tasks have already been completed, the new plan cannot be planned based on best_cominations.
-3) Therefore a new best_combination has to be made, that can run on the fly.
-
- - Implement replanning method (Solved)
-0) Redo the layoutgraph so that shuttles can move backwards (SOLVED)
-1) Find all distinct permutations for mixes left in the production order (SOLVED)
-1.1) Keep track of the orders left in production order (SOLVED)
-2) For each distinct permutations create a graph (SOLVED)
-3) perform A* or djikstra (SOLVED)
-4) keep track of the internal state of each shuttle including how far in the production order it is and its position (SOLVED)
-4.1) Do this by creating a new class for shuttles (SOLVED)
-4.2) Implement a shuttle manager (SOLVED)
-5) Implement new functionality in the replan function (SOLVED)
-6) Implement in main (SOLVED)
+    Because replanning might require shuttles to move backwards, they LayoutGraph now has backwards edges.
+    Creates new class (Shuttle) for managing the internal state of each shuttle e.g. current position, stations left in mix, etc.
+    Created a class called shuttleManager that contains all shuttles
+    Implemented replanning function that is executed when a collision appears, in the following way:
+    4.1) Find colors left in production order
+    4.2) Find each distinct permutation
+    4.3) For each distinct permutation create a new graph, weighted based on a heuristic
+    4.4) Remove collision edge/node from the new graph
+    4.5) For each graph perform djikstra or A* (djikstra right now) to find the best path
+    4.6) Sort them using a min-heap, and return the best station combination
+    4.7) Find path based on best station combination -> if no path found return
+    4.8) Get movements from path and set new movements for shuttlke
