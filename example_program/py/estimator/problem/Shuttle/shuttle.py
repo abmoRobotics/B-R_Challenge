@@ -9,18 +9,15 @@ class Shuttle:
         self.movements = movements
         self.current_position = ['0_start']
         self.visited_processing_stations = []
-        self.processing_stations = []
         self.initial_mix_set = False
 
     
     def processing_done(self, processing_type):
+        """ Function to update the current mix of the shuttle after processing is done.
+        
+        Args:
+            processing_type (str): The type of processing that was done e.g. 'b', 'y', 'g'."""
         self._current_mix[processing_type] -= 1
-    
-    def set_processing_stations(self, processing_stations):
-        self.processing_stations = processing_stations
-
-    def get_processing_stations(self):
-        return self.processing_stations
 
     def update_position(self, movement_command: str):
         current_position = self.current_position[0]
@@ -35,12 +32,6 @@ class Shuttle:
             x = int(x) + 1
         elif movement_command == 'l':
             x = int(x) - 1
-
-        # check if previous position was a processing station,
-        # if so, add it to the list of visited processing stations
-        if self.current_position[0] in self.processing_stations:
-            index = self.processing_stations.index(self.current_position[0]) 
-            self.processing_stations.pop(index)
 
         # Update the current position
         self.current_position = [f'{x}_{y}']
