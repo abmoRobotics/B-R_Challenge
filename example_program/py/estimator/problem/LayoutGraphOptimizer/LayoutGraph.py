@@ -331,9 +331,6 @@ class LayoutGraph():
         reduced_graph.G.remove_nodes_from(remove_nodes)
         
         return reduced_graph
-        """TODO: Find the shortest paths for a given mix"""
-        
-        raise NotImplementedError("This function is not implemented yet.")
 
     def plot(self, color_map: dict):
         """Plot the graph with the node positions as given in the layout"""

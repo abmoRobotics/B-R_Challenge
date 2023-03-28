@@ -1,7 +1,7 @@
 import random
 from tqdm import tqdm
 from LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path
-from LayoutGraphOptimizer.utils import random_layout, find_paths, calculate_costs, find_optimal_station_amounts
+from LayoutGraphOptimizer.utils import *
 from find_paths import VARIANT_MIXES
 
 
@@ -68,29 +68,54 @@ STATION_PROCESSING_TIME = {
 
 ##### MAIN #####
 
-EPOCHS = 1000    # How many iterations of samples should be taken from the solution space (if we brute force it)
+EPOCHS = 100    # How many iterations of samples should be taken from the solution space (if we brute force it)
 SIZE_X = 4      # Size of the layout
 SIZE_Y = 4      # Size of the layout
 BOARD_DIMENSIONS = (SIZE_X, SIZE_Y)
 
+node_types = get_node_types(VARIANT_MIXES)
+
 station_amounts = find_optimal_station_amounts(BOARD_DIMENSIONS, PROD_ORDER, STATION_PLACEMENT_COST, STATION_PROCESSING_TIME)
 
-randomLayout = random_layout(BOARD_DIMENSIONS, VARIANT_MIXES)
-randomgraph = LayoutGraph(randomLayout, STATION_PROCESSING_TIME)
-randomgraph.plot(COLOR_MAP)
+randomLayout = random_layout(BOARD_DIMENSIONS, node_types)
+randomGraph  = LayoutGraph(randomLayout, STATION_PROCESSING_TIME)
+randomGraph.plot(COLOR_MAP)
 
-# Iterate through samples and find the best solution. Can you think of a better way to find the best solution using less naive optimization methods?
-for epoch in tqdm(range(0, EPOCHS)):
+adjustedLayout = adjust_layout(randomLayout, node_types, 3)
+adjustedGraph = LayoutGraph(adjustedLayout, STATION_PROCESSING_TIME)
+adjustedGraph.plot(COLOR_MAP)
 
-    # Sample from solution space or create a random layout
+# itr = 0
+# bestCost = maxsize
+# prevBestCost = 0
+# while abs(bestCost - prevBestCost) > 1 or itr > 2:
+#     randomGraphs = []
+#     # Iterate through samples and find the best solution. Can you think of a better way to find the best solution using less naive optimization methods?
+#     for epoch in tqdm(range(0, EPOCHS)):
+        
+#         if itr == 0:
+#             # Sample from solution space or create a random layout
+#             newLayout = random_layout(BOARD_DIMENSIONS, VARIANT_MIXES, station_amounts)
+#         else:
+#             tempGraph = random.choice(bestGraphs)
+#             newLayout = adjust_layout(tempGraph, 1)
+        
+#         # Create a graph based on the new layout
+#         newGraph = LayoutGraph(newLayout, STATION_PROCESSING_TIME)
+        
+#         # Calculate the costs for the paths. What do we want to minizine? You might need to come up with a useful metric here.
+#         graphCost = estimate_layout_cost(newGraph)
+          
+#         # Save the results somehow
+#         randomGraphs.append((newGraph, graphCost))
 
-    # Find the shortest paths for the production order given the current sample
-
-    # Calculate the costs for the paths. What do we want to minizine? You might need to come up with a useful metric here.
-
-    # Save the results somehow
+#     # Keep the best graphs
+#     bestGraphs = sorted(randomGraphs, key=lambda x: x[1])
+#     nKeep = min(EPOCHS, 10) # Keeping the 10 best
+#     bestGraphs = bestGraphs[0:nKeep]
     
-    pass
-
+#     prevBestCost = bestCost
+#     itr += 1
 
 # Find the best result based on the production cost and save it to a file
+#bestGraph = min(bestGraphs, key=lambda x : x[1])

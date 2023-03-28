@@ -6,22 +6,32 @@ from sys import maxsize
 
 NUM_SHUTTLES = 15
 
-def random_layout(board_dimensions: tuple, variant_mixes: dict) -> LayoutGraph:
-    """TODO: Create a random layout with the given dimensions and node types"""
-    
-    num_cells = board_dimensions[0]*board_dimensions[1] # The number of cells in the area where stations can be placed
-    
+def get_node_types(variant_mixes: dict) -> list[str]:
     node_types = []
     for mix in variant_mixes:
         for type in variant_mixes[mix]:
             if variant_mixes[mix][type] > 0 and type not in node_types: node_types.append(type)
+    return node_types
+
+def random_layout(board_dimensions: tuple, node_types = list, station_amounts: tuple = None) -> dict:
+    """TODO: Create a random layout with the given dimensions and node types"""
     
-    # Select a random number of stations to place
-    num_stations = random.randrange(len(node_types), min(NUM_SHUTTLES, num_cells))
+    num_cells = board_dimensions[0]*board_dimensions[1] # The number of cells in the area where stations can be placed
     
-    station_types = [node for node in node_types]
-    for _ in range(num_stations-len(node_types)):
-        station_types.append(random.choice(node_types))
+    if station_amounts is None:
+        # Select a random number of stations to place
+        num_stations = random.randrange(len(node_types), min(NUM_SHUTTLES, num_cells))
+        
+        station_types = [node for node in node_types]
+        for _ in range(num_stations-len(node_types)):
+            station_types.append(random.choice(node_types))
+    else:
+        num_stations = sum(station_amounts)
+        
+        # Append the actual station types based on the number in given in station_amounts
+        station_types = []
+        for i, num in enumerate(station_amounts):
+            station_types.extend([node_types[i]]*num)
     
     idx_placements = random.sample(range(num_cells), num_stations)
 
@@ -35,6 +45,83 @@ def random_layout(board_dimensions: tuple, variant_mixes: dict) -> LayoutGraph:
     
     return layout
 
+def adjust_layout(layout: dict, node_types: list, num_operations: int) -> dict:
+    """Adjust a layout by making a random small change to it.\n
+    The possible changes are: 
+    - Adding a random station to a free location
+    - Removing a random station from the layout
+    - Moving a station to a free location
+    - Chaning the color of a random station from the layout"""
+    adjusted_layout = layout.copy()
+    
+    free_idx_placements = [idx for idx, node in enumerate(layout['nodes']) if node == 'null']
+    node_idx_placements = [idx for idx, node in enumerate(layout['nodes']) if node != 'null']
+    
+    for _ in range(num_operations):
+        adjustment_type = random.choice(["ADD", "REMOVE", "MOVE", "COLOR_CHANGE"])
+        
+        match adjustment_type:
+            case "ADD": # Add a random station
+                idx_placement = random.choice(free_idx_placements)
+                node_type = random.choice(node_types)
+                
+                adjusted_layout['nodes'][idx_placement] = node_type
+            
+            case "REMOVE": # Remove a random station
+                node_idx_placement = random.choice(node_idx_placements)
+                
+                adjusted_layout['nodes'][node_idx_placement] = 'null'
+            
+            case "MOVE": # Move a random station to a free position
+                new_node_idx_placement = None
+                while new_node_idx_placement is None:
+                    node_idx_placement = random.choice(node_idx_placements)
+                    new_node_idx_placement = get_random_direction(layout, node_idx_placement)
+                
+                adjusted_layout['nodes'][new_node_idx_placement] = adjusted_layout['nodes'][node_idx_placement]
+                adjusted_layout['nodes'][node_idx_placement] = 'null'
+                
+            case "COLOR_CHANGE": # Change the color of a random station
+                node_idx_placement = random.choice(node_idx_placements)
+                node_color = adjusted_layout['nodes'][node_idx_placement]
+                new_node_color = random.choice([color for color in node_types if color != node_color])
+                
+                adjusted_layout['nodes'][node_idx_placement] = new_node_color
+    
+    return adjusted_layout
+
+def get_random_direction(layout: dict, idx: int) -> int:
+    num_cells = layout['length_x']*layout['length_y']
+    
+    # Possible directions
+    directions = ["UP", "DOWN", "RIGHT", "LEFT"]
+    
+    # Determine the feasible direction based on boundaries and station placements
+    feasible_directions = directions
+    if (0 <= idx and idx < layout['length_x']) or (layout['nodes'][idx - layout['length_x']] != 'null'):
+        feasible_directions.remove("UP")
+    if (num_cells - layout['length_x'] <= idx and idx < num_cells) or (layout['nodes'][idx + layout['length_x']] != 'null'): 
+        feasible_directions.remove("DOWN")
+    if ((idx+1) % layout['length_x'] == 0) or (layout['nodes'][idx + 1] != 'null'): 
+        feasible_directions.remove("RIGHT")
+    if ((idx+1) % layout['length_x'] == 1) or (layout['nodes'][idx - 1] != 'null'): 
+        feasible_directions.remove("LEFT")
+    
+    # Return None if there are no feasible directions
+    if len(feasible_directions) == 0: return None
+    
+    # Choose a random direction from the feasible directions
+    direction = random.choice(feasible_directions)
+    
+    # Obtain the new index from the chosen feasible direction
+    match direction:
+        case "UP": new_idx = idx - layout['length_x']
+        case "DOWN": new_idx = idx + layout['length_x']
+        case "RIGHT": new_idx = idx + 1
+        case "LEFT": new_idx = idx - 1
+    
+    return new_idx
+    
 def find_optimal_station_amounts(board_dimensions: tuple, production_order: dict, placement_costs: dict, processing_times: dict) -> dict:
     # Determine how many station visits for each type are required by the production order
     station_visits = {station_type: 0 for station_type in production_order['mix_a']['mix']}
@@ -60,22 +147,15 @@ def find_optimal_station_amounts(board_dimensions: tuple, production_order: dict
                 cost = np.dot(x_vec, PC_vec) + max( np.divide(np.matmul(SV_mat, PT_vec), x_vec) )
                 
                 # If the cost is the lowest so far, save it
-                if cost < optimal_stations['cost']: 
-                    optimal_stations['amounts'] = (b, y, g)
+                if cost <= optimal_stations['cost']: 
+                    optimal_stations['amounts'] = tuple(x_vec)
                     optimal_stations['cost'] = cost
   
     return optimal_stations
     
+def estimate_layout_cost(graph: LayoutGraph, production_order: dict, placement_costs: dict) -> int:
+    raise NotImplementedError("estimate_layout_cost is not implemented")
 
-def find_paths(layout, weights, prod_order) -> dict:
-    """TODO: Find all paths for a given production order"""
-
-    raise NotImplementedError("This function is not implemented yet.")
-
-def calculate_costs(paths, prod_order, layout, station_placement_cost):
-    """TODO: Create a cost function that takes the paths and the layout and returns the overall cost of the production order"""
-
-    raise NotImplementedError("This function is not implemented yet.")
 
 def get_movement_instructions_from_path(path: Path):
     """Get the movement instructions and start position for a given path"""
