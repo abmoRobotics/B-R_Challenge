@@ -114,7 +114,8 @@ def switch_status (client: mqtt_client, telegram):
             if (dir is not None):
                 move_telegram = { "method": "MOVE_SHUTTLE_TO", "id": telegram['data']['shuttleId'], "direction": dir }
                 send_data(client, move_telegram)
-        
+                #time.sleep(0.1)
+
     elif telegram['method'] == "PROCESSING_DONE":
         # Get the previous and current segments from the path and remove it from the list
         previous_pathSegment = current_paths[telegram['data']['shuttleId']].pop(0)
@@ -124,6 +125,7 @@ def switch_status (client: mqtt_client, telegram):
         model.graph.update_weights(previous_pathSegment, model.combinations, reset_weights=True)
         model.graph.update_weights(next_pathSegment, model.combinations)
         
+        model.processingDone(telegram['data']['shuttleId'], color)
         dir = model.get_next_move(telegram['data']['shuttleId'])
         if (dir is not None):
             move_telegram = { "method": "MOVE_SHUTTLE_TO", "id": telegram['data']['shuttleId'], "direction": dir }
@@ -138,12 +140,12 @@ def switch_status (client: mqtt_client, telegram):
                 
                 # Replan if station is occupied or processing
                 model.replan(telegram['error']['shuttleId'])
-                dir = model.get_current_move(telegram['error']['shuttleId'])
+                dir = model.get_next_move(telegram['error']['shuttleId'])
 
                 if (dir is not None):
-                    print('starting timer to move next in 2 sec')
-                    thread = Thread(target=threadedNextMove, args=(client, telegram['error']['shuttleId'], dir))
-                    thread.start()
+                    move_telegram = { "method": "MOVE_SHUTTLE_TO", "id": telegram['error']['shuttleId'], "direction": dir }
+                    send_data(client, move_telegram)
+
             if telegram['error']['errorId'] == 20003:
                 # If the start station is locked (20003) send the same move command again
                     print('starting timer to move next in 2 sec')
@@ -181,6 +183,8 @@ def switch_status (client: mqtt_client, telegram):
         move_telegram = None
         startStation = None
         mix = None
+        
+        model.reset_move(telegram['data']['shuttleId'])
         # A potentially unncessary check, but make sure the shuttle is reset on local side aswell before proceeding 
         if (model.is_move_reset(telegram['data']['shuttleId'])):
             # Here we start the returning of shuttles
