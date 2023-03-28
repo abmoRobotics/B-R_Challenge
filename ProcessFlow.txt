@@ -23,6 +23,7 @@ some of the tasks have already been completed, the new plan cannot be planned ba
 3) Therefore a new best_combination has to be made, that can run on the fly.
 
  - Implement replanning method (Solved)
+0) Redo the layoutgraph so that shuttles can move backwards (SOLVED)
 1) Find all distinct permutations for mixes left in the production order (SOLVED)
 1.1) Keep track of the orders left in production order (SOLVED)
 2) For each distinct permutations create a graph (SOLVED)
