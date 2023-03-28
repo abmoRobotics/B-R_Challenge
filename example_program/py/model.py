@@ -310,9 +310,7 @@ class Model:
 
         if path == "NO_PATH":
             # Reverse movement step, because no movement occured.
-            current_pos = shuttle.get_current_pos()-1
-            shuttle.set_current_pos(current_pos)
-
+            shuttle.reverse_movement()
             return "NO_PATH"
         
         path = flatten(path)

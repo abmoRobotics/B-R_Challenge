@@ -40,14 +40,17 @@ class Shuttle:
         self.current_position = [f'{x_pos}_{y_pos}']
 
     def set_movements(self, movements):
+        """ Function to set the movements of the shuttle, also resets the current move position.
+        
+        Args:
+            movements (List[str]): The movements of the shuttle e.g. ['f', 'r', 'f', 'f']"""
         self.movements = deepcopy(movements)
         self.current_move_pos = -1
+    
+    def reverse_movement(self):
+        """ Function to reverse the movement of the shuttle."""
+        self.current_move_pos -= 1
 
-    def set_current_pos(self, current_pos):
-        self.current_move_pos = deepcopy(current_pos)
-
-    def get_current_pos(self):
-        return self.current_move_pos
 
     def get_current_position(self):
         return self.current_position[0]
