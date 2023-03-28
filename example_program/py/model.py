@@ -196,13 +196,20 @@ class Model:
             
             # Find the shortest path to the next station
             if current_station != next_station:
-                nodes_shortest_path = nx.shortest_path(reduced_graph.G, current_station, next_station, weight='weight')
-                
+                try: 
+                    nodes_shortest_path = nx.shortest_path(
+                        reduced_graph.G, current_station, next_station, weight='weight')
+                    # reduced_graph.G.remove_node(current_station)
+                except nx.exception.NetworkXNoPath:
+                    print(f'No path from {current_station} to {next_station}')
+                    return "NO_PATH"
+
+
                 # Remove the nodes from the handover position to the chosen start lane
-                if i == 0: 
+                if i == 0 and shuttle == None:
                     startIdx = next(idx-1 for idx, node in enumerate(nodes_shortest_path) if node[-1] == '0')
                     nodes_shortest_path = nodes_shortest_path[startIdx:]
-            
+
             # If the current and next station are identical go the side (with least cost) and back again
             else:
                 tempCost = sys.maxsize
