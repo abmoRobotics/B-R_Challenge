@@ -1,17 +1,21 @@
 from typing import List
-
+from copy import deepcopy
 class Shuttle:
-    def __init__(self, shuttle_id, current_mix='', current_move_pos=-1, movements=None, current_pos=None):
+    def __init__(self, shuttle_id, current_move_pos=-1, movements=None, current_pos=None):
         self.shuttle_id = shuttle_id
-        self.current_mix = current_mix
-        self.current_move_pos = current_move_pos
+        self._current_mix = None
+        self.current_mix_tester = None
+        self.current_move_pos = deepcopy(current_move_pos)
         self.movements = movements
         self.current_position = ['0_start']
         self.visited_processing_stations = []
         self.processing_stations = []
         self.initial_mix_set = False
 
-
+    
+    def processing_done(self, processing_type):
+        self._current_mix[processing_type] -= 1
+    
     def set_processing_stations(self, processing_stations):
         self.processing_stations = processing_stations
 
@@ -21,8 +25,6 @@ class Shuttle:
     def update_position(self, movement_command: str):
         current_position = self.current_position[0]
         x, y = current_position.split('_')
-        #x = current_position[:split_index]
-       # y = current_position[split_index + 1:]
         if y == 'start' and movement_command == 'f':
             y = 0
         elif movement_command == 'f':
@@ -34,7 +36,6 @@ class Shuttle:
         elif movement_command == 'l':
             x = int(x) - 1
 
-
         # check if previous position was a processing station,
         # if so, add it to the list of visited processing stations
         if self.current_position[0] in self.processing_stations:
@@ -44,18 +45,18 @@ class Shuttle:
         # Update the current position
         self.current_position = [f'{x}_{y}']
 
-
-
-
     def set_start_position(self, x_pos: int, y_pos: int):
         self.current_position = [f'{x_pos}_{y_pos}']
 
     def set_movements(self, movements):
-        self.movements = movements
+        self.movements = deepcopy(movements)
         self.current_move_pos = -1
 
     def set_current_pos(self, current_pos):
-        self.current_pos = current_pos
+        self.current_move_pos = deepcopy(current_pos)
+
+    def get_current_pos(self):
+        return self.current_move_pos
 
     def get_current_position(self):
         return self.current_position[0]
@@ -64,47 +65,31 @@ class Shuttle:
         return self.shuttle_id
 
     def get_current_mix(self):
-        return self.current_mix
+        return self._current_mix
 
-    def set_current_mix(self, current_mix):
-        self.current_mix = current_mix
+    def set_current_mix(self, _current_mix):
+        self._current_mix = deepcopy(_current_mix)
 
     def get_initial_move(self):
         self.current_move_pos += 1
         return self.movements[self.current_move_pos]
 
     def get_next_move(self):
-        if self.current_move_pos + 1 < len(self.movements) and self.current_mix != ('' or None):
+        if self.current_move_pos + 1 < len(self.movements) and self._current_mix != ('' or None):
             self.current_move_pos += 1
             return self.movements[self.current_move_pos]
         else:
             return None
 
     def get_current_move(self):
-        if self.current_move_pos < len(self.movements) and self.current_mix != ('' or None):
+        if self.current_move_pos < len(self.movements) and self._current_mix != ('' or None):
             return self.movements[self.current_move_pos]
         else:
             return None
-
+    
     def reset_movement(self):
         self.current_move_pos = -1
 
-    def get_movement(self, goal_position):
-        x_diff = goal_position[0] - self.current_position[0]
-        y_diff = goal_position[1] - self.current_position[1]
-
-        if x_diff == 0 and y_diff == 0:
-            return None
-        elif x_diff > 0:
-            return 'r'
-        elif x_diff < 0:
-            return 'l'
-        elif y_diff > 0:
-            return 'f'
-        elif y_diff < 0:
-            return 'b'
-
-    
     def get_next_position(self):
         current_position = self.current_position[0]
         x, y = current_position.split('_')
@@ -122,10 +107,6 @@ class Shuttle:
 
         return f'{x}_{y}'
 
-
-
-
-    
     def is_move_reset(self):
         return self.current_move_pos == -1 or not self.initial_mix_set
 
@@ -141,6 +122,9 @@ class ShuttleManager:
             self.shuttles: List[Shuttle] = [Shuttle(i) for i in range(number_of_shuttles)]
 
     def get_shuttle_by_id(self, shuttle_id):
+        if shuttle_id == 7 or shuttle_id == '5':
+            a= 1
+            # print(f'Getting shuttle with id {shuttle_id}')
         for shuttle in self.shuttles:
             if shuttle.get_id() == int(shuttle_id):
                 return shuttle
