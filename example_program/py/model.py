@@ -120,13 +120,13 @@ class Model:
             move (string): The next move of the shuttle either 'f', 'b', 'l', 'r'
         """
         return self.shuttleManager.get_shuttle_by_id(shuttleId).get_next_move()
-    
-    def get_current_move (self, shuttleId: int):
+
+    def get_current_move(self, shuttleId: int):
         """ Get the current move for a given shuttle
-        
+
         Args:
             shuttleId (int): The shuttle id
-            
+
         Returns:
             move (string): The current move of the shuttle either 'f', 'b', 'l', 'r'
         """
@@ -134,15 +134,15 @@ class Model:
 
     def is_move_reset(self, shuttleId: int) -> bool:
         """ Check if the shuttle has reached the start position
-        
+
         Args:
             shuttleId (int): The shuttle id
-        
+
         Returns:
             is_reset (bool): True if the shuttle has reached the start position"""
         return self.shuttleManager.get_shuttle_by_id(shuttleId).is_move_reset()
-    
-    def get_stations_to_visit (self, mixId: int) -> list[str]:
+
+    def get_stations_to_visit(self, mixId: int) -> list[str]:
         """Get a list of stations to visit for a given mix
         Parameters:
             mixId {string} -- The mix id
@@ -150,30 +150,30 @@ class Model:
             stations_to_visit {list} -- A list of stations to visit
         """
         best_combination = get_best_combination(self.combinations[mixId])
-        
+
         return self.convert_combination_to_stations(best_combination)
 
     def convert_combination_to_stations(self, combination: Combination) -> list[str]:
         """ Convert a combination to a list of stations to visit
-        
+
         Arguments:
             combination {Combination} -- The combination to convert
-            
+
         Returns:
             stations_to_visit {list} -- A list of stations to visit"""
         stations_to_visit = []
         for node in combination.nodes:
             stations_to_visit.append(f'{node[0]}_{node[1]}')
-            
+
         return stations_to_visit
-    
-    def find_optimal_path_from_stations (self, stations_to_visit: list, start_node = 'start', remove_edges = None) -> list[Path]:
+
+    def find_optimal_path_from_stations(self, stations_to_visit: list, start_node='start', remove_edges=None, shuttle=None) -> list[Path]:
         """Find the segmented optimal path from a list of stations to the next station
-        
+
         Args:
             stations {list} -- A list of stations
             start_node {str} -- The start node of the path
-            
+
         Returns:
             path_nodes {list[Path]} -- A list of nodes in the path
         """
@@ -185,15 +185,15 @@ class Model:
         if not remove_edges is None:
             reduced_graph.G.remove_edges_from(remove_edges)
         # Add start and end nodes to the list of stations to visit
-        stations_to_visit = [start_node] + stations_to_visit + ['end']        
-        
+        stations_to_visit = [start_node] + stations_to_visit + ['end']
+
         # Find the optimal path
         path_nodes = []
         segment_indices = [0]
         for i in range(len(stations_to_visit)-1):
             current_station = stations_to_visit[i]
             next_station = stations_to_visit[i+1]
-            
+
             # Find the shortest path to the next station
             if current_station != next_station:
                 try: 
@@ -218,26 +218,29 @@ class Model:
                     if out_edge[1][-1] == current_station[-1] and reduced_graph.G.nodes[out_edge[1]]['weight'] < tempCost:
                         tempCost = reduced_graph.G.nodes[out_edge[1]]['weight']
                         adjacent_node = out_edge[1]
-                
+
                 nodes_shortest_path = [current_station] + [adjacent_node] + [next_station]
-            
+
             # Append the local path to the full path
-            path_nodes += nodes_shortest_path[:-1] # Remove the last node since it is the next station
+            # Remove the last node since it is the next station
+            path_nodes += nodes_shortest_path[:-1]
             segment_indices.append(len(path_nodes))
-        
-        path_nodes.append(stations_to_visit[-1]) # Add the last station to the path# Add the end node to the path
-        
+
+        # Add the last station to the path# Add the end node to the path
+        path_nodes.append(stations_to_visit[-1])
         # Convert to actual nodes in the networkx format
         path_nodes = [self.graph.G.nodes[node] for node in path_nodes]
-        
+
         # Obtain the path segments from the full path
         path_node_segments = []
         for i in range(len(segment_indices)-1):
             segment = path_nodes[segment_indices[i]+1:segment_indices[i+1]+1]
-            if i == 0: segment.insert(0, path_nodes[0]) # Insert the start node for the first segment
-            
+            if i == 0:
+                # Insert the start node for the first segment
+                segment.insert(0, path_nodes[0])
+
             path_node_segments.append(Path(segment))
-        
+
         return path_node_segments
     
     def set_next_movement (self, shuttleId: int, mixId: int, movements: list):
@@ -259,30 +262,30 @@ class Model:
 
     def update_position(self, shuttleId: int):
         """ Update the current position of the shuttle
-        
+
         Args:
             shuttleId (int): The shuttle id"""
-        
+
         shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         movement_command = shuttle.get_current_move()
         shuttle.update_position(movement_command)
 
-    def set_start_position(self, shuttleId: int, x: int, y = 'start'):
+    def set_start_position(self, shuttleId: int, x: int, y='start'):
         """ Set the start position of the shuttle
-        
+
         Args:
             shuttleId (int): The shuttle id
             position (list): The start position of the shuttle"""
-        
+
         shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         shuttle.set_start_position(x_pos=x, y_pos=y)
 
     def replan(self, shuttleId: int):
         """ Replan the path for the shuttle
-        
+
         Args:
             shuttleId (int): The shuttle id"""
-        
+
         shuttle: Shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         start_position = shuttle.get_current_position()
         stations = shuttle.get_processing_stations()
