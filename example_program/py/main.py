@@ -25,7 +25,7 @@ board = json.load(f)
 f.close()
 
 # Start our model
-model = Model(global_graph, reduced_combinations)
+model = Model(global_graph, reduced_combinations, VARIANT_MIXES)
 
 def threadedNextMove(client: mqtt_client, id, dir):
     # Timer(2, getDeferredNextMove, (client, id, dir))
@@ -64,7 +64,7 @@ def connect ():
 
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            # print("Connected to MQTT Broker!")
+            print("Connected to MQTT Broker!")
             init_cmd(client, topic_cmd)
         else:
             assert False, f'Failed to connect, return code {rc}'
