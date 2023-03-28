@@ -21,10 +21,9 @@ class Shuttle:
     def update_position(self, movement_command: str):
         current_position = self.current_position[0]
         x, y = current_position.split('_')
-
         #x = current_position[:split_index]
        # y = current_position[split_index + 1:]
-        if y == 'start':
+        if y == 'start' and movement_command == 'f':
             y = 0
         elif movement_command == 'f':
             y = int(y) + 1
