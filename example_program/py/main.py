@@ -14,7 +14,7 @@ topic_cmd = "aws_br/command"
 topic_status = "aws_br/status"
 client_id = f'python-mqtt-student-machine'
 #Global variables
-sleeper = 2 #sec
+sleeper = 0.1 #sec
 
 # Save the current paths of the shuttles
 current_paths = {str(shuttleId): [] for shuttleId in range(15)}
