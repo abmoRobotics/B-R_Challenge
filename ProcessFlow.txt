@@ -15,7 +15,7 @@ Step 6: Use the path to make the shuttle move (Anton)
 
 
 Anton:
-	Because replanning might require shuttles to move backwards, they LayoutGraph now has backwards edges.
+    Because replanning might require shuttles to move backwards, they LayoutGraph now has backwards edges.
     Creates new class (Shuttle) for managing the internal state of each shuttle e.g. current position, stations left in mix, etc.
     Created a class called shuttleManager that contains all shuttles
     Implemented replanning function that is executed when a collision appears, in the following way:
