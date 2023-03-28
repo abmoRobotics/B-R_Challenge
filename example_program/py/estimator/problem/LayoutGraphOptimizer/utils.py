@@ -20,10 +20,6 @@ def calculate_costs(paths, prod_order, layout, station_placement_cost):
 
     raise NotImplementedError("This function is not implemented yet.")
 
-def manhattan_distance(pos1, pos2) -> int:
-    """Find the Manhattan distance between pos1 and pos2"""
-    return abs(pos2[0] - pos1[0]) + abs(pos2[1] - pos1[1])
-
 def get_movement_instructions_from_path(path: Path):
     """Get the movement instructions and start position for a given path"""
     # Movement instructions are like ["f", "l", "f", "r", "f"]
@@ -90,7 +86,7 @@ def get_movement_instructions_from_path(path: Path):
     
     return movement_instructions, start_row
 
-def get_sorted_best_combinations(combination_list: list[Combination], n) -> list[Combination]:
+def get_best_combinations(combination_list: list[Combination], n) -> list[Combination]:
     """Return a list of the n best combinations from the "combination_list" based on cost 
     and sorted from best to worst.
     """
