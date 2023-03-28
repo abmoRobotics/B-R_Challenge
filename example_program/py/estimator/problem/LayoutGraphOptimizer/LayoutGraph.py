@@ -99,6 +99,13 @@ class LayoutGraph():
                     node_color_bottom = layout['nodes'][indx_bottom]
                     self.G.add_edge(f"{x}_{y}", f"{x}_{y+1}", weight=weights[node_color_bottom])
 
+                # NEW
+                if 0 < y < layout['length_y'] - 1:
+                    indx_bottom = (y+1) * layout['length_x'] + x
+                    node_color_bottom = layout['nodes'][indx_bottom]
+                    self.G.add_edge(f"{x}_{y}", f"{x}_{y-1}", weight=weights[node_color_bottom])
+
+
                 # Add edge to the left
                 if x > 0:
                     indx_left = y * layout['length_x'] + x - 1
@@ -182,7 +189,10 @@ class LayoutGraph():
         # This function is used as an heuristic for knn to find the nearest(cheapest) neighbors.
     def heuristic_for_knn(self, point1, point2):
         """ Right now the heuristic is just the Euclidean distance between two points."""
-        heuristic = math.sqrt(sum((p1 - p2) ** 2 for p1, p2 in zip(point1, point2)))
+        # heuristic = math.sqrt(sum((p1 - p2) ** 2 for p1, p2 in zip(point1, point2)))
+        heuristic = 0
+        for i in range(len(point1)):
+            heuristic += (point1[i] - point2[i]) ** 2
         # Here we penalize the shuttle for moving to the same station.
         if heuristic == 0: heuristic = 2 
         # Here we disallow the shuttle to move backwards, because it is not allowed to do so.
@@ -314,7 +324,7 @@ class LayoutGraph():
                     if node['pos'] in combination.nodes:
                         combination.cost += sign*weight*combination.nodes.count(node['pos'])
         
-    def reduce(self, stations_to_visit: list[str]):
+    def reduce(self, stations_to_visit: list[str], current_position=None):
         """Return the reduced graph including free nodes and the nodes contained in the stations to visit"""
         reduced_graph = deepcopy(self)
         
@@ -322,18 +332,26 @@ class LayoutGraph():
         for node in self.G:
             # Getting the position and type of the node
             type = self.G.nodes[node]['type']
+            pos = self.G.nodes[node]['name']
             
             # If the node is start, end, or free station or it is included in the combination, it should be part of the graph
-            if (type in ('null', 'start', 'end') or node in stations_to_visit): continue
+            if ((type in ('null', 'start', 'end') or node in stations_to_visit) or (current_position == pos)): continue
             
             remove_nodes.append(node)
+
 
         reduced_graph.G.remove_nodes_from(remove_nodes)
         
         return reduced_graph
-        """TODO: Find the shortest paths for a given mix"""
+    
+    # TODO: Figure out where to call this function
+    def reduce_and_remove_edge(self, stations_to_vist: list[str], current_pos: str, invalid_pos: str):
         
-        raise NotImplementedError("This function is not implemented yet.")
+        reduced_graph = self.reduce(stations_to_vist)
+        edge = (current_pos, invalid_pos)
+        reduced_graph.G.remove_node(edge)
+        return reduced_graph
+
 
     def plot(self, color_map: dict):
         """Plot the graph with the node positions as given in the layout"""
