@@ -118,12 +118,37 @@ def switch_status (client: mqtt_client, telegram):
 
     elif telegram['method'] == "PROCESSING_DONE":
         # Get the previous and current segments from the path and remove it from the list
-        previous_pathSegment = current_paths[telegram['data']['shuttleId']].pop(0)
-        next_pathSegment = current_paths[telegram['data']['shuttleId']][0]
-        
-        # Reset the weights from the previous path segment and update the weights for the next path segment
-        model.graph.update_weights(previous_pathSegment, model.combinations, reset_weights=True)
-        model.graph.update_weights(next_pathSegment, model.combinations)
+
+        # TODO: This is not the best way to do this, but it works for now
+        if current_paths[telegram['data']['shuttleId']] == []:
+            # If the list is empty, the shuttle is done
+           
+            # Move the shuttle to the start lane
+            print(f'Shuttle {telegram["data"]["shuttleId"]} is done! only going forwards')
+            move_telegram = { "method": "MOVE_SHUTTLE_TO", "id": telegram['data']['shuttleId'], "direction": 'f' }
+            send_data(client, move_telegram)
+            
+            return
+        else:
+            previous_pathSegment = current_paths[telegram['data']['shuttleId']].pop(0)
+        try:
+            next_pathSegment = current_paths[telegram['data']['shuttleId']][0]
+                
+                # Reset the weights from the previous path segment and update the weights for the next path segment
+            model.graph.update_weights(previous_pathSegment, model.combinations, reset_weights=True)
+            model.graph.update_weights(next_pathSegment, model.combinations)
+        except IndexError:
+            pass
+
+        color = None
+        if telegram['data']['color'] == "green":
+             color = 'g'
+        elif telegram['data']['color'] == "blue":
+            color = 'b'
+        elif telegram['data']['color'] == "yellow":
+            color = 'y'
+        else:
+            assert False, f'Unknown color {telegram["data"]["color"]}'
         
         model.processingDone(telegram['data']['shuttleId'], color)
         dir = model.get_next_move(telegram['data']['shuttleId'])
