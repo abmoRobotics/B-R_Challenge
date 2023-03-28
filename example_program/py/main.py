@@ -5,16 +5,14 @@ from threading import Timer
 from threading import Thread
 from time import sleep
 from model import Model, get_movement_instructions_from_path, flatten
-
-from estimator.problem.find_paths import global_graph, reduced_combinations
-
+from estimator.problem.find_paths import global_graph, reduced_combinations, VARIANT_MIXES
+import time
 # static data for connecting
 broker = 'localhost' #192.168.99.110
 port = 1883
 topic_cmd = "aws_br/command"
 topic_status = "aws_br/status"
 client_id = f'python-mqtt-student-machine'
-
 #Global variables
 sleeper = 2 #sec
 
