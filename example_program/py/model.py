@@ -259,7 +259,13 @@ class Model:
         shuttle.reset_movement() # reset movement
     
     ## New functions ##
-
+    def reset_move(self, shuttleId: int):
+        """ Reset the movement of the shuttle
+        
+        Args:
+            shuttleId (int): The shuttle id"""
+        shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
+        shuttle.reset_movement()
     def update_position(self, shuttleId: int):
         """ Update the current position of the shuttle
 
@@ -290,8 +296,20 @@ class Model:
         start_position = shuttle.get_current_position()
         stations = shuttle.get_processing_stations()
 
-        edges_to_remove = [(shuttle.get_current_position(), shuttle.get_next_position())]
-        path = self.find_optimal_path_from_stations(stations, start_node=start_position, remove_edges=edges_to_remove)
+        edges_to_remove = [(shuttle.get_current_position(),
+                            shuttle.get_next_position())]
+
+        x, y = shuttle.get_next_position().split('_')
+        stations = self.replan_combinations(shuttleId, remove_node=(shuttle.get_next_position()))
+        a = 1
+        path = self.find_optimal_path_from_stations(
+            stations, start_node=start_position, remove_edges=edges_to_remove, shuttle=shuttle)
+
+        if path == "NO_PATH":
+            current_pos = shuttle.get_current_pos()-1
+            shuttle.set_current_pos(current_pos)
+            #print(f'No path found for shuttle {shuttleId}')
+            return "NO_PATH"
         path = flatten(path)
 
         
@@ -302,8 +320,164 @@ class Model:
         shuttle.reset_movement()
 
     # TODO: Implement this function
-    def replan_combination():
-        pass
+    def replan_combinations(self, shuttleId: int, remove_node=None):
+        """ Replan the combination path for the shuttle, if the shuttle is currently in the middle of a combination, and has to replan
+        
+        Args:
+            shuttleId (int): The shuttle id
+            
+        Returns:
+            list: A list of stations to visit in order to complete the order e.g. ['start', (0, 0), (0, 2), (0, 6), 'end'])]"""
+        G = deepcopy(self.graph.G)
+
+        shuttle: Shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
+
+        mix = shuttle.get_current_mix()
+        
+        stations_in_mix = {station_type: [node['pos'] for node in G.nodes.values() if node['type'] == station_type]
+                           for station_type in mix}
+
+        station_samples = [stations_in_mix[station_type] for station_type in mix for _ in range(mix[station_type])]
+        
+        # If finished plan from current position to end
+        if station_samples == []:
+            return []
+
+        station_permutations = [item for item in distinct_permutations(station_samples)]
+
+        current_position = shuttle.get_current_position()
+
+        # format
+        x, y = current_position.split('_')
+        current_position = (int(x), int(y)) if y != 'start' else (int(x), -1)
+
+        # TODO: FIX DUPLCIATE NAMES .. is fixed
+        graphs = self.create_graph(station_permutations, source_pos=current_position, remove_node=remove_node)
+
+
+        # Find the shortest path for each graph
+        shortest_combination = [nx.shortest_path(graph, source='start', target='end', weight='weight') for graph in graphs]
+
+        # Calculate the cost for each path
+        costs = [(self.calculate_cost(graph, path), path, graph) for graph, path in zip(graphs, shortest_combination)]
+        heapq.heapify(costs)    # min heap
+
+        # Returns the station combination with the lowest cost
+        best_combination = heapq.heappop(costs)
+     
+        # Convert of the new graph to the original names from the global graph
+        graph, node_names = best_combination[2], best_combination[1][1:-1] # [1:-1] to remove start and end node
+        combination = [graph.nodes[node_name]['original_name'] for node_name in node_names]
+
+
+        # for graph in graphs:
+        #     self.visualize_graph(graph)
+        return combination
+        
+
+    def calculate_cost(self, graph, path):
+        """ Simple function to calculate the cost of a path of combinations
+        
+        Args:
+            graph (nx.DiGraph): The graph
+            path (list): The path of combinations
+        
+        Returns:
+            cost (int): The cost of the path"""
+        cost = 0
+        for i in range(len(path)-1):
+            cost += graph[path[i]][path[i+1]]['weight']
+        return cost
+        
+    def create_graph(self, permutation_list, source_pos = (0, 0), start_node="start", end_node="end", remove_node=None):
+        """ Create a graph for each permutation
+        
+        Args:
+            permutation_list (list): A list of distinct permutations
+            source_pos (tuple): The position of the shuttle
+            start_node (str): The start node (current position of the shuttle))
+            end_node (str): The end node (the end station)
+            
+        Returns:
+            graphs (list): A list of graphs generated from the permutations"""
+        # right now there is created a graph for each permutation (probably not a good idea for scaling)
+        graphs = [nx.DiGraph() for _ in permutation_list]
+
+        # add start and end node
+        for graph in graphs:
+            graph.add_node(start_node, pos=source_pos, original_name='start')
+            graph.add_node(end_node, pos=(3, 8), original_name='end')
+
+        # This is very nested ......
+        for i, permutation in enumerate(permutation_list):
+            graph = graphs[i]
+            for j, stations in enumerate(permutation):
+                if j == 0:
+                    for station in stations:
+                        node_name = f'{j}_{station[0]}_{station[1]}'
+                        graph.add_node(node_name, pos=station, original_name=f'{station[0]}_{station[1]}')
+                        graph.add_edge(start_node, node_name, weight=self.heuristic(graph, start_node, node_name))
+                else:
+                    for station in stations:
+                        for prev_station in permutation[j-1]:
+                            node_name = f'{j}_{station[0]}_{station[1]}'
+                            prev_node_name = f'{j-1}_{prev_station[0]}_{prev_station[1]}'
+                            graph.add_node(node_name, pos=station, original_name=f'{station[0]}_{station[1]}')
+                            graph.add_edge(prev_node_name, node_name, weight=self.heuristic(graph, prev_node_name, node_name))
+            
+            # connect last station to end node
+            for last_station in permutation[-1]:
+                last_node_name = f'{len(permutation)-1}_{last_station[0]}_{last_station[1]}'
+                graph.add_edge(last_node_name, end_node, weight=self.heuristic(graph, last_node_name, end_node))
+
+        nodes_to_remove = []
+        if remove_node is not None:
+            for graph in graphs:
+                for node in graph.nodes:
+                    if remove_node == graph.nodes[node]['original_name']:
+                        nodes_to_remove.append(node)
+
+        for node in nodes_to_remove:
+            for graph in graphs:
+                if node in graph.nodes:
+                    graph.remove_node(node)
+
+        return graphs
+    
+    def heuristic(self, graph, node, end_node):
+        """ Calculate the heuristic for the djikstra algorithm
+        
+        Args:
+            graph (nx.DiGraph): The graph
+            node (tuple/str): The current node
+            end_node (tuple/str): The end node
+            
+        Returns:
+            metric (int): The heuristic value"""
+        
+        start_pos = graph.nodes[node]['pos']
+        end_pos = graph.nodes[end_node]['pos']
+        # metric is the manhattan distance right now.
+        metric = abs(start_pos[0] - end_pos[0]) + abs(start_pos[1] - end_pos[1])
+        if end_node == 'end':
+            # only y coordinate is important
+            metric = abs(start_pos[1] - end_pos[1])
+
+        return metric
+    def visualize_graph(self, graph):
+        a = graph
+        # Red if start or end node, else the type of the node.
+        colors = ['r' if node in ('start', 'end') else self.graph.G.nodes[node[2:]]['type'] for node in graph.nodes()]
+
+        pos = nx.get_node_attributes(graph ,'pos')
+        nx.draw_networkx(graph, with_labels=True, font_color='white', node_size=1000, node_color=colors, font_size=8, pos=pos)
+        plt.show()
+        
+
+    def processingDone(self, shuttleId: int, type1: str):
+        
+        shuttle: Shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
+        shuttle.processing_done(type1)
 
     def create_graphs(self):
         pass
