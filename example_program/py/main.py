@@ -30,14 +30,14 @@ model = Model(global_graph, reduced_combinations)
 def threadedNextMove(client: mqtt_client, id, dir):
     # Timer(2, getDeferredNextMove, (client, id, dir))
     sleep(sleeper)
-    print('moving next shuttle')
+    # print('moving next shuttle')
     data = {"method": "MOVE_SHUTTLE_TO", "id": id, "direction": dir}
     dump = json.dumps(data)
     client.publish(topic_cmd, dump)
 
 def threadedMoveShuttleToStart(client: mqtt_client, id, startLane):
     sleep(sleeper)
-    print('moving next shuttle')
+    # print('moving next shuttle')
     data = {"method": "MOVE_SHUTTLE_TO_START", "id": id, "stationId": startLane}
     dump = json.dumps(data)
     client.publish(topic_cmd, dump)
@@ -48,7 +48,7 @@ def init_cmd(client: mqtt_client, topic):
     client.publish(topic, dump)
 
 def send_data(client: mqtt_client, telegram):
-    print(telegram)
+    # print(telegram)
     dump = json.dumps(telegram)
     client.publish(topic_cmd, dump)
     # thread = Thread(target=deferred_send_data, args=(client, telegram))
@@ -56,7 +56,7 @@ def send_data(client: mqtt_client, telegram):
 
 def deferred_send_data (client: mqtt_client, telegram):
     sleep(sleeper)
-    print(telegram)
+    # print(telegram)
     dump = json.dumps(telegram)
     client.publish(topic_cmd, dump)
 
@@ -64,7 +64,7 @@ def connect ():
 
     def on_connect(client, userdata, flags, rc):
         if rc == 0:
-            print("Connected to MQTT Broker!")
+            # print("Connected to MQTT Broker!")
             init_cmd(client, topic_cmd)
         else:
             assert False, f'Failed to connect, return code {rc}'
