@@ -242,22 +242,22 @@ class Model:
             path_node_segments.append(Path(segment))
 
         return path_node_segments
-    
-    def set_next_movement (self, shuttleId: int, mixId: int, movements: list):
+
+    def set_next_movement(self, shuttleId: int, mixId: int, movements: list):
         """ Set the next movement for a given shuttle,
         and set the initial mix to true.
-        
+
         Args:
             shuttleId (int): The shuttle id 
-            mixId (int): The mix id of the format: ["mix_a", "mix_b", "mix_c", "..."]
+            mixId (str): The mix id of the format: "mix_a", "mix_..."
             movements (list): A list of movements in the format: ["f", "b", "l", "r", "f", "b", "l", "r", ...]"""
-        
+
         shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
-        shuttle.set_current_mix(mixId) # set current mix
-        shuttle.set_movements(movements) # set movements
-        shuttle.set_initial_mix_set(True) # set initial mix 
-        shuttle.reset_movement() # reset movement
-    
+        shuttle.set_current_mix(self.variant_mixes[mixId])  # set current mix
+        shuttle.set_movements(movements)  # set movements
+        shuttle.set_initial_mix_set(True)  # set initial mix
+        shuttle.reset_movement()  # reset movement
+
     ## New functions ##
     def reset_move(self, shuttleId: int):
         """ Reset the movement of the shuttle
@@ -312,7 +312,6 @@ class Model:
             return "NO_PATH"
         path = flatten(path)
 
-        
         movements, _ = get_movement_instructions_from_path(path)
         
         # Change shuttle attributes
