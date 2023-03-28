@@ -177,9 +177,11 @@ class Model:
         Returns:
             path_nodes {list[Path]} -- A list of nodes in the path
         """
-        
+        current_position = None
+        if shuttle is not None:
+            current_position = shuttle.get_current_position()
         # Remove nodes that are not available for the route.
-        reduced_graph = self.graph.reduce(stations_to_visit)
+        reduced_graph = deepcopy(self.graph.reduce(stations_to_visit, current_position=current_position))
         if not remove_edges is None:
             reduced_graph.G.remove_edges_from(remove_edges)
         # Add start and end nodes to the list of stations to visit
