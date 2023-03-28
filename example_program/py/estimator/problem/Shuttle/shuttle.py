@@ -37,6 +37,11 @@ class Shuttle:
         self.current_position = [f'{x}_{y}']
 
     def set_start_position(self, x_pos: int, y_pos: int):
+        """ Function to set the start position of the shuttle.
+        
+        Args:
+            x_pos (int): The x position of the shuttle.
+            y_pos (int): The y position of the shuttle."""
         self.current_position = [f'{x_pos}_{y_pos}']
 
     def set_movements(self, movements):

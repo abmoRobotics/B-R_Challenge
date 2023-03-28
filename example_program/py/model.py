@@ -78,7 +78,6 @@ class Model:
                 mix_least_WIP = order['started'] - order['completed']
                 mix = order['id']
 
-        self.shuttleManager.get_shuttle_by_id(shuttleId).set_current_pos('start')
         self.shuttleManager.get_shuttle_by_id(shuttleId).set_current_mix(self.variant_mixes[mix])
         return mix
 
