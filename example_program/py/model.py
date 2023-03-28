@@ -1,4 +1,6 @@
-import json, sys
+from estimator.problem.find_paths import global_graph, reduced_combinations
+import json
+import sys
 import networkx as nx
 from estimator.problem.LayoutGraphOptimizer.utils import get_movement_instructions_from_path, get_best_combination, flatten
 from estimator.problem.LayoutGraphOptimizer.LayoutGraph import LayoutGraph, Path, Combination
@@ -6,8 +8,12 @@ from estimator.problem.Shuttle.shuttle import Shuttle, ShuttleManager
 from estimator.problem.find_paths import VARIANT_MIXES
 from re import findall
 from typing import List
+from more_itertools import distinct_permutations
+import matplotlib.pyplot as plt
+import heapq
+from copy import deepcopy
 class Model:
-    def __init__(self, graph: LayoutGraph, combinations: dict):
+    def __init__(self, graph: LayoutGraph, combinations: dict, variant_mixes: dict):
         f = open('example_program/py/data/board.movements.json')
         movements = json.load(f)
         f = open('example_program/py/data/board.shuttles.json')
@@ -52,7 +58,15 @@ class Model:
             mix_count[best_mix] += 1
 
             # Set attribute for processing stations to shuttle.
-            shuttle.set_processing_stations(self.convert_combination_to_stations(best_combination))
+            shuttle.set_processing_stations(
+                self.convert_combination_to_stations(best_combination))
+            
+            # Get attributes of best mix
+        
+
+            # Set attribute for current mix to shuttle.
+            shuttle.set_current_mix(self.variant_mixes[best_mix])
+            
 
 
             mixes.append({
@@ -228,6 +242,7 @@ class Model:
 
         # Add the last station to the path# Add the end node to the path
         path_nodes.append(stations_to_visit[-1])
+
         # Convert to actual nodes in the networkx format
         path_nodes = [self.graph.G.nodes[node] for node in path_nodes]
 
