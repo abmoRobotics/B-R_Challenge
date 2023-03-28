@@ -508,3 +508,10 @@ class Model:
     def get_finished_orders(self):
         return self.finished_orders
     
+
+if __name__ == "__main__":
+    model = Model(global_graph, reduced_combinations, VARIANT_MIXES)
+    
+    # model.get_initial_mixes(7)
+    # model.replan_combinations(0)
+    # model.replan(0)
