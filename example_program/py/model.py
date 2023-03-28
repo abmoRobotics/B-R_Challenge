@@ -18,7 +18,7 @@ class Model:
         self.once = 0
         self.graph = graph
         self.combinations = combinations
-
+        self.variant_mixes = variant_mixes
         # New approach for shuttles
         n_shuttles = 15
         self.shuttleManager = ShuttleManager(n_shuttles)
@@ -29,19 +29,20 @@ class Model:
         mix_count = {mix: 0 for mix in self.combinations}
         for col in range(columns):
             shuttle: Shuttle = self.shuttleManager.get_shuttle_by_id(col)
-            
+
             try:
                 shuttle.set_initial_mix_set(True)
             except:
                 shuttle.set_movements([])
-            
+
             # Find the best mix for the given start column
             above_node_type = self.graph.G.nodes[f'{col}_0']['type']
             mix_least_cost = sys.maxsize
             for mix in self.combinations:
                 if above_node_type != 'null'\
-                   and (above_node_type not in VARIANT_MIXES[mix] or VARIANT_MIXES[mix][above_node_type] == 0): continue
-                
+                   and (above_node_type not in VARIANT_MIXES[mix] or VARIANT_MIXES[mix][above_node_type] == 0):
+                    continue
+
                 for combination in self.combinations[mix]:
                     tempCost = self.graph.get_cost(combination, col, only_length=True)
                     if tempCost < mix_least_cost or (tempCost == mix_least_cost and mix_count[mix] < mix_count[best_mix]):
@@ -49,7 +50,6 @@ class Model:
                         best_mix = mix
                         best_combination = combination
             mix_count[best_mix] += 1
-            
 
             # Set attribute for processing stations to shuttle.
             shuttle.set_processing_stations(self.convert_combination_to_stations(best_combination))
@@ -60,42 +60,41 @@ class Model:
                 "mixId": best_mix,
                 "stationsToVisit": self.convert_combination_to_stations(best_combination)
             })
-        
+
         return mixes
-    
-    def get_next_mix (self, shuttleId: int) -> str:
+
+    def get_next_mix(self, shuttleId: int) -> str:
         '''Get the next mix with the least orders currently in progress (least WIP)'''
         mix = None
         mix_least_WIP = sys.maxsize
         for order in self.finished_orders:
-            if (order['started'] < order['quantity']) and (order['started'] - order['completed']) < mix_least_WIP: 
+            if (order['started'] < order['quantity']) and (order['started'] - order['completed']) < mix_least_WIP:
                 mix_least_WIP = order['started'] - order['completed']
                 mix = order['id']
 
-
         self.shuttleManager.get_shuttle_by_id(shuttleId).set_current_pos('start')
-        self.shuttleManager.get_shuttle_by_id(shuttleId).set_current_mix(mix)
+        self.shuttleManager.get_shuttle_by_id(shuttleId).set_current_mix(self.variant_mixes[mix])
         return mix
-    
-    def get_current_mix (self, shuttleId: int) -> str:
+
+    def get_current_mix(self, shuttleId: int) -> str:
         """ Get the current mix for a given shuttle
-        
+
         Args:
             shuttleId (int): The shuttle id
-            
+
         Returns:
             mix (string): The current mix of the shuttle
             """
         return self.shuttleManager.get_shuttle_by_id(shuttleId).get_current_mix()
-    
-    def get_initial_moves (self, columns: int, paths: list) -> list:
+
+    def get_initial_moves(self, columns: int, paths: list) -> list:
         """ Get the initial moves for each shuttle,
         only to be called once at the start of the simulation.
-        
+
         Args:
             columns (int): The number of columns
             paths (list): A list of paths for each shuttle
-        
+
         Returns:
             moves (list): A list of moves for each shuttle
             """
@@ -110,13 +109,13 @@ class Model:
             })
 
         return moves
-   
-    def get_next_move (self, shuttleId: int):
+
+    def get_next_move(self, shuttleId: int):
         """ Get the next move for a given shuttle
-        
+
         Args:
             shuttleId (int): The shuttle id
-            
+
         Returns:
             move (string): The next move of the shuttle either 'f', 'b', 'l', 'r'
         """
@@ -297,16 +296,15 @@ class Model:
     def create_graphs(self):
         pass
 
-    
-    def setOnce (self, once):
+    def setOnce(self, once):
         self.once = once
 
-    def getOnce (self):
+    def getOnce(self):
         return self.once
 
-    def set_finished_orders (self, finished_orders):
+    def set_finished_orders(self, finished_orders):
         self.finished_orders = finished_orders
 
-    def get_finished_orders (self):
+    def get_finished_orders(self):
         return self.finished_orders
     
