@@ -57,18 +57,10 @@ class Model:
                         best_combination = combination
             mix_count[best_mix] += 1
 
-            # Set attribute for processing stations to shuttle.
-            shuttle.set_processing_stations(
-                self.convert_combination_to_stations(best_combination))
-            
-            # Get attributes of best mix
-        
-
             # Set attribute for current mix to shuttle.
             shuttle.set_current_mix(self.variant_mixes[best_mix])
             
-
-
+            # Append the mix to the list of mixes, with the shuttle id and the mix id
             mixes.append({
                 "shuttleId": str(shuttle.get_id()),
                 "mixId": best_mix,
@@ -273,7 +265,6 @@ class Model:
         shuttle.set_initial_mix_set(True)  # set initial mix
         shuttle.reset_movement()  # reset movement
 
-    ## New functions ##
     def reset_move(self, shuttleId: int):
         """ Reset the movement of the shuttle
         
@@ -281,6 +272,7 @@ class Model:
             shuttleId (int): The shuttle id"""
         shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         shuttle.reset_movement()
+
     def update_position(self, shuttleId: int):
         """ Update the current position of the shuttle
 
@@ -309,22 +301,20 @@ class Model:
 
         shuttle: Shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         start_position = shuttle.get_current_position()
-        stations = shuttle.get_processing_stations()
 
-        edges_to_remove = [(shuttle.get_current_position(),
-                            shuttle.get_next_position())]
+        edges_to_remove = [(shuttle.get_current_position(), shuttle.get_next_position())]
 
-        x, y = shuttle.get_next_position().split('_')
         stations = self.replan_combinations(shuttleId, remove_node=(shuttle.get_next_position()))
-        a = 1
-        path = self.find_optimal_path_from_stations(
-            stations, start_node=start_position, remove_edges=edges_to_remove, shuttle=shuttle)
+
+        path = self.find_optimal_path_from_stations(stations, start_node=start_position, remove_edges=edges_to_remove, shuttle=shuttle)
 
         if path == "NO_PATH":
+            # Reverse movement step, because no movement occured.
             current_pos = shuttle.get_current_pos()-1
             shuttle.set_current_pos(current_pos)
-            #print(f'No path found for shuttle {shuttleId}')
+
             return "NO_PATH"
+        
         path = flatten(path)
 
         movements, _ = get_movement_instructions_from_path(path)
@@ -333,7 +323,6 @@ class Model:
         shuttle.set_movements(movements)
         shuttle.reset_movement()
 
-    # TODO: Implement this function
     def replan_combinations(self, shuttleId: int, remove_node=None):
         """ Replan the combination path for the shuttle, if the shuttle is currently in the middle of a combination, and has to replan
         
@@ -471,6 +460,7 @@ class Model:
         
         start_pos = graph.nodes[node]['pos']
         end_pos = graph.nodes[end_node]['pos']
+
         # metric is the manhattan distance right now.
         metric = abs(start_pos[0] - end_pos[0]) + abs(start_pos[1] - end_pos[1])
         if end_node == 'end':
@@ -478,6 +468,7 @@ class Model:
             metric = abs(start_pos[1] - end_pos[1])
 
         return metric
+    
     def visualize_graph(self, graph):
         a = graph
         # Red if start or end node, else the type of the node.
