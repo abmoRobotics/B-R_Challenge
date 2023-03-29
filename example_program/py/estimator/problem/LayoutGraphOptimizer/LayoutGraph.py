@@ -231,7 +231,7 @@ class LayoutGraph():
             return results   
 
     
-    def find_combinations(self, mix: dict, method: str = "brute", k: int = -1) -> list[Combination]:
+    def find_combinations(self, mix: dict, method: str = "brute", k: int = -1, only_length_cost: bool = False) -> list[Combination]:
         """Find the different combinations of stations for the given mix.\n
         Possible methods:
             - "brute": Using brute force to find all combinations
@@ -280,7 +280,7 @@ class LayoutGraph():
                 # Only keep the valid combinations (i.e. those that don't go backwards) and assign the cost
                 #if not self.is_valid(Combination(item), mix): continue # TODO: Can be removed because we already check this in the heuristic
 
-                final_combinations.append(Combination(item, self.get_cost(Combination(item))))
+                final_combinations.append(Combination(item, self.get_cost(Combination(item), only_length=only_length_cost)))
 
         # Return the list containing all the combinations
         return final_combinations

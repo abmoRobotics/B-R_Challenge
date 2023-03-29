@@ -75,47 +75,55 @@ BOARD_DIMENSIONS = (SIZE_X, SIZE_Y)
 
 node_types = get_node_types(VARIANT_MIXES)
 
-station_amounts = find_optimal_station_amounts(BOARD_DIMENSIONS, PROD_ORDER, STATION_PLACEMENT_COST, STATION_PROCESSING_TIME)
+### FOR TESTING ###
+# station_amounts = find_optimal_station_amounts(BOARD_DIMENSIONS, PROD_ORDER, STATION_PLACEMENT_COST, STATION_PROCESSING_TIME)
 
-randomLayout = random_layout(BOARD_DIMENSIONS, node_types)
-randomGraph  = LayoutGraph(randomLayout, STATION_PROCESSING_TIME)
-randomGraph.plot(COLOR_MAP)
+# randomLayout = random_layout(BOARD_DIMENSIONS, node_types)
+# randomGraph  = LayoutGraph(randomLayout, STATION_PROCESSING_TIME)
+# randomCost = estimate_layout_cost(randomGraph, PROD_ORDER, STATION_PLACEMENT_COST, num_combinations=3)
+# randomGraph.plot(COLOR_MAP)
 
-adjustedLayout = adjust_layout(randomLayout, node_types, 3)
-adjustedGraph = LayoutGraph(adjustedLayout, STATION_PROCESSING_TIME)
-adjustedGraph.plot(COLOR_MAP)
+# adjustedLayout = adjust_layout(randomLayout, node_types, 3)
+# adjustedGraph = LayoutGraph(adjustedLayout, STATION_PROCESSING_TIME)
+# adjustedCost = estimate_layout_cost(adjustedGraph, PROD_ORDER, STATION_PLACEMENT_COST, num_combinations=3)
+# adjustedGraph.plot(COLOR_MAP)
+###################
 
-# itr = 0
-# bestCost = maxsize
-# prevBestCost = 0
-# while abs(bestCost - prevBestCost) > 1 or itr > 2:
-#     randomGraphs = []
-#     # Iterate through samples and find the best solution. Can you think of a better way to find the best solution using less naive optimization methods?
-#     for epoch in tqdm(range(0, EPOCHS)):
-        
-#         if itr == 0:
-#             # Sample from solution space or create a random layout
-#             newLayout = random_layout(BOARD_DIMENSIONS, VARIANT_MIXES, station_amounts)
-#         else:
-#             tempGraph = random.choice(bestGraphs)
-#             newLayout = adjust_layout(tempGraph, 1)
-        
-#         # Create a graph based on the new layout
-#         newGraph = LayoutGraph(newLayout, STATION_PROCESSING_TIME)
-        
-#         # Calculate the costs for the paths. What do we want to minizine? You might need to come up with a useful metric here.
-#         graphCost = estimate_layout_cost(newGraph)
-          
-#         # Save the results somehow
-#         randomGraphs.append((newGraph, graphCost))
-
-#     # Keep the best graphs
-#     bestGraphs = sorted(randomGraphs, key=lambda x: x[1])
-#     nKeep = min(EPOCHS, 10) # Keeping the 10 best
-#     bestGraphs = bestGraphs[0:nKeep]
+itr = 0
+bestCost = maxsize
+prevBestCost = 0
+bestGraphs = []
+while itr < 5: # abs(bestCost - prevBestCost) > 1
+    randomGraphs = bestGraphs
+    prevBestCost = bestCost
     
-#     prevBestCost = bestCost
-#     itr += 1
+    # Iterate through samples and find the best solution. Can you think of a better way to find the best solution using less naive optimization methods?
+    for epoch in tqdm(range(0, EPOCHS)):
+        if itr == 0:
+            # Sample from solution space or create a random layout
+            newLayout = random_layout(BOARD_DIMENSIONS, node_types)
+        else:
+            tempGraph, _ = random.choice(bestGraphs)
+            newLayout = adjust_layout(tempGraph.layout, node_types, 1)
+        
+        # Create a graph based on the new layout
+        newGraph = LayoutGraph(newLayout, STATION_PROCESSING_TIME)
+        
+        # Calculate the costs for the paths. What do we want to minizine? You might need to come up with a useful metric here.
+        graphCost = estimate_layout_cost(newGraph, PROD_ORDER, STATION_PLACEMENT_COST)
+        
+        # Save the results somehow
+        randomGraphs.append((newGraph, graphCost))
+
+    # Keep the best graphs
+    bestGraphs = sorted(randomGraphs, key=lambda x: x[1])
+    nKeep = min(EPOCHS, 10) # Keeping the 10 best
+    bestGraphs = bestGraphs[0:nKeep]
+    bestCost = bestGraphs[0][1]
+    
+    print(bestCost)
+    
+    itr += 1
 
 # Find the best result based on the production cost and save it to a file
-#bestGraph = min(bestGraphs, key=lambda x : x[1])
+bestGraph = min(bestGraphs, key=lambda x : x[1])

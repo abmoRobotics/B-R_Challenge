@@ -13,7 +13,7 @@ def get_node_types(variant_mixes: dict) -> list[str]:
             if variant_mixes[mix][type] > 0 and type not in node_types: node_types.append(type)
     return node_types
 
-def random_layout(board_dimensions: tuple, node_types = list, station_amounts: tuple = None) -> dict:
+def random_layout(board_dimensions: tuple, node_types = list[str], station_amounts: tuple = None) -> dict:
     """TODO: Create a random layout with the given dimensions and node types"""
     
     num_cells = board_dimensions[0]*board_dimensions[1] # The number of cells in the area where stations can be placed
@@ -45,7 +45,7 @@ def random_layout(board_dimensions: tuple, node_types = list, station_amounts: t
     
     return layout
 
-def adjust_layout(layout: dict, node_types: list, num_operations: int) -> dict:
+def adjust_layout(layout: dict, node_types: list[str], num_operations: int) -> dict:
     """Adjust a layout by making a random small change to it.\n
     The possible changes are: 
     - Adding a random station to a free location
@@ -57,8 +57,14 @@ def adjust_layout(layout: dict, node_types: list, num_operations: int) -> dict:
     free_idx_placements = [idx for idx, node in enumerate(layout['nodes']) if node == 'null']
     node_idx_placements = [idx for idx, node in enumerate(layout['nodes']) if node != 'null']
     
+    nodes_in_layout = [layout['nodes'][idx] for idx in node_idx_placements]
+    node_amounts = {node_type: nodes_in_layout.count(node_type) for node_type in node_types}
+    
+    possible_changes = ["ADD", "REMOVE", "MOVE", "COLOR_CHANGE"]
+    if len(node_idx_placements) <= 3: possible_changes.remove("REMOVE")
+    
     for _ in range(num_operations):
-        adjustment_type = random.choice(["ADD", "REMOVE", "MOVE", "COLOR_CHANGE"])
+        adjustment_type = random.choice(possible_changes)
         
         match adjustment_type:
             case "ADD": # Add a random station
@@ -69,6 +75,8 @@ def adjust_layout(layout: dict, node_types: list, num_operations: int) -> dict:
             
             case "REMOVE": # Remove a random station
                 node_idx_placement = random.choice(node_idx_placements)
+                while node_amounts[adjusted_layout['nodes'][node_idx_placement]] <= 1:
+                    node_idx_placement = random.choice(node_idx_placements)
                 
                 adjusted_layout['nodes'][node_idx_placement] = 'null'
             
@@ -93,11 +101,8 @@ def adjust_layout(layout: dict, node_types: list, num_operations: int) -> dict:
 def get_random_direction(layout: dict, idx: int) -> int:
     num_cells = layout['length_x']*layout['length_y']
     
-    # Possible directions
-    directions = ["UP", "DOWN", "RIGHT", "LEFT"]
-    
     # Determine the feasible direction based on boundaries and station placements
-    feasible_directions = directions
+    feasible_directions = ["UP", "DOWN", "RIGHT", "LEFT"]
     if (0 <= idx and idx < layout['length_x']) or (layout['nodes'][idx - layout['length_x']] != 'null'):
         feasible_directions.remove("UP")
     if (num_cells - layout['length_x'] <= idx and idx < num_cells) or (layout['nodes'][idx + layout['length_x']] != 'null'): 
@@ -153,9 +158,23 @@ def find_optimal_station_amounts(board_dimensions: tuple, production_order: dict
   
     return optimal_stations
     
-def estimate_layout_cost(graph: LayoutGraph, production_order: dict, placement_costs: dict) -> int:
-    raise NotImplementedError("estimate_layout_cost is not implemented")
-
+def estimate_layout_cost(graph: LayoutGraph, production_order: dict, placement_costs: dict, num_combinations: int = 1) -> int:
+    """Return an estimated layout cost based an worst average combination cost of the mixes and the added placement cost"""
+    # Determine the average costs for the num_combinations best mix combinations
+    best_combinations = {}
+    mix_means = {}
+    for mix in production_order:
+        combinations = graph.find_combinations(production_order[mix]['mix'], method="knn", k=1, only_length_cost=True)
+        best_combinations[mix] = get_best_combinations(combinations, num_combinations)
+        mix_means[mix] = sum([combination.cost for combination in best_combinations[mix]])/len(best_combinations)
+    
+    # Determine the placement cost based on the graph
+    placement_cost = 0
+    for node_type in graph.layout['nodes']:
+        if node_type != 'null':
+            placement_cost += placement_costs[node_type]
+    
+    return placement_cost + max(mix_means.values())
 
 def get_movement_instructions_from_path(path: Path):
     """Get the movement instructions and start position for a given path"""
