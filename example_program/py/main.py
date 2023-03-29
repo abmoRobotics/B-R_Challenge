@@ -5,7 +5,7 @@ from threading import Timer
 from threading import Thread
 from time import sleep
 from model import Model, get_movement_instructions_from_path, flatten
-from estimator.problem.find_paths import global_graph, reduced_combinations, VARIANT_MIXES
+from estimator.problem.find_paths import global_graph, reduced_combinations, VARIANT_MIXES, COLOR_MAP, get_key_from_value
 import time
 # static data for connecting
 broker = 'localhost' #192.168.99.110
@@ -139,17 +139,9 @@ def switch_status (client: mqtt_client, telegram):
             model.graph.update_weights(next_pathSegment, model.combinations)
         except IndexError:
             pass
-
-        color = None
-        if telegram['data']['color'] == "green":
-             color = 'g'
-        elif telegram['data']['color'] == "blue":
-            color = 'b'
-        elif telegram['data']['color'] == "yellow":
-            color = 'y'
-        else:
-            assert False, f'Unknown color {telegram["data"]["color"]}'
         
+        
+        color = get_key_from_value(COLOR_MAP, telegram['data']['color'])
         model.processingDone(telegram['data']['shuttleId'], color)
         dir = model.get_next_move(telegram['data']['shuttleId'])
         if (dir is not None):
