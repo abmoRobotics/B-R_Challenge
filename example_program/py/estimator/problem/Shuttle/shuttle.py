@@ -184,7 +184,7 @@ class ShuttleManager:
         for i in range(number_of_shuttles):
             self.shuttles: List[Shuttle] = [Shuttle(i) for i in range(number_of_shuttles)]
 
-    def get_shuttle_by_id(self, shuttle_id):
+    def get_shuttle_by_id(self, shuttle_id: int) -> Shuttle:
         """ Returns the shuttle with the given id.
         
         Args:
@@ -194,5 +194,18 @@ class ShuttleManager:
             Shuttle: The shuttle with the given id or None if no shuttle with the given id exists."""
         for shuttle in self.shuttles:
             if shuttle.get_id() == int(shuttle_id):
+                return shuttle
+        return None
+
+    def get_shuttle_by_position(self, position: str) -> Shuttle:
+        """ Returns the shuttle at the given position.
+        
+        Args:
+            position (str): A position on the grid.
+        
+        Returns:
+            Shuttle: The shuttle at the given position or None if no shuttle with the given id exists."""
+        for shuttle in self.shuttles:
+            if shuttle.get_current_position() == position:
                 return shuttle
         return None

@@ -292,6 +292,27 @@ class Model:
         shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
         shuttle.set_start_position(x_pos=x, y_pos=y)
 
+    def check_headon_collision(self, shuttleId: int) -> bool:
+        """ Check head-on collision of the given shuttle
+
+        Args:
+            shuttleId (int): The shuttle id
+
+        Returns:
+            bool: Whether head-on collision has occured or not
+        """
+        # Get the shuttle and its position
+        shuttle: Shuttle = self.shuttleManager.get_shuttle_by_id(shuttleId)
+        position = shuttle.get_current_position()
+        
+        # Get where the shuttle is trying to go and find the shuttle that is there
+        nextPosition = shuttle.get_next_position()
+        nextShuttle: Shuttle = self.shuttleManager.get_shuttle_by_position(nextPosition)
+        
+        if nextShuttle is None: return False
+        
+        return nextShuttle.get_next_position() == position
+    
     def replan(self, shuttleId: int):
         """ Replan the path for the shuttle
 
@@ -374,7 +395,6 @@ class Model:
         #     self.visualize_graph(graph)
         return combination
         
-
     def calculate_cost(self, graph, path):
         """ Simple function to calculate the cost of a path of combinations
         

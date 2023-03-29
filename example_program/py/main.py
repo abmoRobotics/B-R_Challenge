@@ -140,7 +140,6 @@ def switch_status (client: mqtt_client, telegram):
         except IndexError:
             pass
         
-        
         color = get_key_from_value(COLOR_MAP, telegram['data']['color'])
         model.processingDone(telegram['data']['shuttleId'], color)
         dir = model.get_next_move(telegram['data']['shuttleId'])
@@ -155,6 +154,7 @@ def switch_status (client: mqtt_client, telegram):
                 # over and over again untill the desired station is free
                 #dir = model.get_current_move(telegram['error']['shuttleId'])
                 
+                #if model.check_headon_collision(telegram['error']['shuttleId']):
                 # Replan if station is occupied or processing
                 model.replan(telegram['error']['shuttleId'])
                 dir = model.get_next_move(telegram['error']['shuttleId'])

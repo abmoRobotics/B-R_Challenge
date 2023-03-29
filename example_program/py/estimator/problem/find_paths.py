@@ -19,16 +19,20 @@ COLOR_MAP = {
 }
 
 # Define weights (i.e. processing time) for each node type (including null)
-nodes = []
+nodes = np.empty((feed['rows'], feed['columns'])).tolist()
 WEIGHTS = {}
-for node in feed['stations']:
+for idx, node in enumerate(feed['stations']):
     color = get_key_from_value(COLOR_MAP, node['color'])
-    nodes.append(color)
+    
+    # To ensure the graph is turned the right way
+    xIdx = idx % feed['columns']
+    yIdx = (feed['rows'] - 1) - math.floor(idx / feed['columns'])
+    nodes[yIdx][xIdx] = color
     
     if node['color'] not in WEIGHTS: WEIGHTS[color] = node['time']
 
 # Define a placement layout of types of processing stations (b, y, g) and null (no station). A position on the grid is a node.
-LAYOUT = {'nodes': nodes,
+LAYOUT = {'nodes': flatten(nodes),
     'length_x': feed['columns'],
     'length_y': feed['rows']}
 
