@@ -105,3 +105,5 @@ def get_worst_combination(combinations: list[Combination]) -> Combination:
 def flatten(l: list[list]) -> list:
     return [item for sublist in l for item in sublist]
 
+def get_key_from_value(dictionary: dict, value):
+    return list(dictionary.keys())[list(dictionary.values()).index(value)]

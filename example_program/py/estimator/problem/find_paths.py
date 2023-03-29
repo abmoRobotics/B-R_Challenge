@@ -1,65 +1,45 @@
 from copy import deepcopy
 from .LayoutGraphOptimizer.LayoutGraph import *
-from .LayoutGraphOptimizer.utils import get_best_combinations
+from .LayoutGraphOptimizer.utils import *
 import json
 
-
-# Define a placement layout of types of processing stations (b, y, g) and null (no station). A position on the grid is a node.
-LAYOUT = {
-    'nodes': [
-        'b', 'null','y','null','y','null','g',
-        'y', 'null', 'y','null','null','null', 'y',
-        'null','null','null','null','null','null','g',
-        'null','null','null','null','null','null','b',
-        'g', 'null','g','null', 'null','null','null',
-        'g', 'null','g','null', 'b','null','null'
-    ],
-    'length_x': 7,
-    'length_y': 6
-}
-
-# Define weights (i.e. processing time) for each node type (including null)
-WEIGHTS = {
-    'b': 3,
-    'y': 3,
-    'g': 3,
-    'null': 1,
-}
+# Loading the board data
+f = open("example_program/py/data/board.feed.data.json")
+feed = json.load(f)
 
 # Set colors for nodes, which is needed for plotting the graph. Note that each you need to define the color for each 
 #   node type (including null) as well as the 'start' and 'end' node types.
 COLOR_MAP = {
     'start': 'black',
     'b': 'blue',
-    'y': 'darkgoldenrod',
+    'y': 'yellow',
     'g': 'green',
     'end': 'black',
     'null': 'grey'
 }
 
-# Variant Mix A: How many of each type of node should be traversed?
-VARIANT_MIXES = {
-    'mix_a': {
-        'g': 2,
-        'y': 1,
-        'b': 0
-     },
-    'mix_b': {
-        'g': 0,
-        'y': 0,
-        'b': 1
-     },
-    'mix_c': {
-        'g': 1,
-        'y': 0,
-        'b': 1
-     },
-    'mix_d': {
-        'g': 0,
-        'y': 1,
-        'b': 1
-     }
-}
+# Define weights (i.e. processing time) for each node type (including null)
+nodes = []
+WEIGHTS = {}
+for node in feed['stations']:
+    color = get_key_from_value(COLOR_MAP, node['color'])
+    nodes.append(color)
+    
+    if node['color'] not in WEIGHTS: WEIGHTS[color] = node['time']
+
+# Define a placement layout of types of processing stations (b, y, g) and null (no station). A position on the grid is a node.
+LAYOUT = {'nodes': nodes,
+    'length_x': feed['columns'],
+    'length_y': feed['rows']}
+
+# The different variant mixes, including color and quantity
+VARIANT_MIXES = {}
+for mix in feed['orders']:
+    VARIANT_MIXES[mix['id']] = {color: 0 for color in WEIGHTS if color != 'null'}
+    for mix_color in mix['recipe']:
+        color = get_key_from_value(COLOR_MAP, mix_color['color'])
+        VARIANT_MIXES[mix['id']][color] = mix_color['quantity']
+
 
 # Create a global graph from layout and weights
 print('Creating graph...')
