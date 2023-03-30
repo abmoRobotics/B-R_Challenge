@@ -173,7 +173,7 @@ module.exports = class Board {
         var return_board = {
             columns: this.columns,
             rows: this.rows,
-            colors: ['green', 'yellow', 'blue'],
+            colors: ['green', 'yellow', 'blue', 'orange'],
             stations: Object.values(this.stations).map(station => {
                 return {
                     id: station.getId(),
