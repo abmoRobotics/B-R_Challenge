@@ -49,6 +49,7 @@ def init_cmd(client: mqtt_client, topic):
 
 def send_data(client: mqtt_client, telegram):
     # print(telegram)
+    time.sleep(sleeper)
     dump = json.dumps(telegram)
     client.publish(topic_cmd, dump)
     # thread = Thread(target=deferred_send_data, args=(client, telegram))
