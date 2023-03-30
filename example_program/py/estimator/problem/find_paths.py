@@ -14,13 +14,16 @@ COLOR_MAP = {
     'b': 'blue',
     'y': 'yellow',
     'g': 'green',
+    'o': 'orange',
     'end': 'black',
     'null': 'grey'
 }
 
+mix_order = ['b', 'y', 'g', 'o']
+
 # Define weights (i.e. processing time) for each node type (including null)
 nodes = np.empty((feed['rows'], feed['columns'])).tolist()
-WEIGHTS = {}
+WEIGHTS = {mix: 0 for mix in mix_order}
 for idx, node in enumerate(feed['stations']):
     color = get_key_from_value(COLOR_MAP, node['color'])
     

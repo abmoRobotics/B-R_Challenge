@@ -109,6 +109,7 @@ def switch_status (client: mqtt_client, telegram):
     elif telegram['method'] == "MOVE_DONE":
         # Update current position of shuttle
         model.update_position(telegram['data']['shuttleId'])
+        
         if telegram['data']['inuse'] == False:
             dir = model.get_next_move(telegram['data']['shuttleId'])
             if (dir is not None):
@@ -134,7 +135,7 @@ def switch_status (client: mqtt_client, telegram):
         try:
             next_pathSegment = current_paths[telegram['data']['shuttleId']][0]
                 
-                # Reset the weights from the previous path segment and update the weights for the next path segment
+            # Reset the weights from the previous path segment and update the weights for the next path segment
             model.graph.update_weights(previous_pathSegment, model.combinations, reset_weights=True)
             model.graph.update_weights(next_pathSegment, model.combinations)
         except IndexError:
