@@ -20,6 +20,7 @@ sleeper = 0.1 #sec
 current_paths = {str(shuttleId): [] for shuttleId in range(15)}
 
 # Opening JSON files
+#f = open('example_program/py/data/board.feed.data_6x7_1.json')
 f = open('example_program/py/data/board.feed.data.json')
 board = json.load(f)
 f.close()

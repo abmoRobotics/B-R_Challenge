@@ -4,7 +4,8 @@ from .LayoutGraphOptimizer.utils import *
 import json
 
 # Loading the board data
-f = open("example_program/py/data/board.feed.data.json")
+#f = open("example_program/py/data/board.feed.data_6x7_1.json")
+f = open('example_program/py/data/board.feed.data.json')
 feed = json.load(f)
 
 # Set colors for nodes, which is needed for plotting the graph. Note that each you need to define the color for each 

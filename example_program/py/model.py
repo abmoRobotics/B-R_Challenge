@@ -220,7 +220,7 @@ class Model:
                 tempCost = sys.maxsize
                 for out_edge in reduced_graph.G.out_edges(current_station):
                     # If it is in the same row and so far has the lower cost, then save it
-                    if out_edge[1][-1] == current_station[-1] and reduced_graph.G.nodes[out_edge[1]]['weight'] < tempCost:
+                    if reduced_graph.G.nodes[out_edge[1]]['weight'] < tempCost:
                         tempCost = reduced_graph.G.nodes[out_edge[1]]['weight']
                         adjacent_node = out_edge[1]
 
